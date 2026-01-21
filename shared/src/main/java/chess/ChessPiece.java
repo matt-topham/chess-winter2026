@@ -65,6 +65,12 @@ public class ChessPiece {
         if (piece.getPieceType() == PieceType.QUEEN) {
             return Queen.getQueenMoves(board, myPosition, pieceColor);
         }
+        if (piece.getPieceType() == PieceType.KING) {
+            return King.getKingMoves(board, myPosition, pieceColor);
+        }
+        if (piece.getPieceType() == PieceType.KNIGHT) {
+            return Knight.getKnightMoves(board, myPosition, pieceColor);
+        }
         return List.of();
     }
 }
