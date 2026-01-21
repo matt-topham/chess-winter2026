@@ -3,6 +3,8 @@ package chess;
 import java.util.Collection;
 import java.util.List;
 
+import chess.pieces.*;
+
 /**
  * Represents a single chess piece
  * <p>
@@ -55,8 +57,10 @@ public class ChessPiece {
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         ChessPiece piece = board.getPiece(myPosition);
         if (piece.getPieceType() == PieceType.BISHOP) {
-            return List.of(new ChessMove(new ChessPosition(5,4),
-                    new ChessPosition(1,8), null));
+            return Bishop.getBishopMoves(board, myPosition, pieceColor);
+        }
+        if (piece.getPieceType() == PieceType.ROOK) {
+            return Rook.getRookMoves(board, myPosition, pieceColor);
         }
         return List.of();
     }
