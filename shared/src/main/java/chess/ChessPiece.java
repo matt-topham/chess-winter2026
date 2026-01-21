@@ -2,6 +2,7 @@ package chess;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import chess.pieces.*;
 
@@ -71,6 +72,23 @@ public class ChessPiece {
         if (piece.getPieceType() == PieceType.KNIGHT) {
             return Knight.getKnightMoves(board, myPosition, pieceColor);
         }
+        if (piece.getPieceType() == PieceType.PAWN) {
+            return Pawn.getPawnMoves(board, myPosition, pieceColor);
+        }
         return List.of();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ChessPiece piece = (ChessPiece) o;
+        return pieceColor == piece.pieceColor && type == piece.type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pieceColor, type);
     }
 }
