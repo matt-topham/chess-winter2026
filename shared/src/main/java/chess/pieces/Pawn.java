@@ -90,5 +90,4 @@ public class Pawn {
             moves.add(new ChessMove(from, to, null));
         }
     }
-
 }
