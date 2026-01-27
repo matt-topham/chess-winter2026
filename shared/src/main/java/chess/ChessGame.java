@@ -1,6 +1,8 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * For a class that can manage a chess game, making moves on a board
@@ -24,7 +26,7 @@ public class ChessGame {
      * @return Which team's turn it is
      */
     public TeamColor getTeamTurn() {
-        throw new RuntimeException("Not implemented");
+        return teamTurn;
     }
 
     /**
@@ -33,7 +35,7 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        throw new RuntimeException("Not implemented");
+        this.teamTurn = team;
     }
 
     /**
@@ -52,7 +54,21 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
+        ChessPiece piece = board.getPiece(startPosition);
+        if (piece == null) {
+            return null;
+        }
+        Collection<ChessMove> potential = piece.pieceMoves(board, startPosition);
+        List<ChessMove> legalMoves = new ArrayList<>();
+        if (potential == null) {
+            return legalMoves;
+        }
+        for(ChessMove move : potential) {
+            if (safeMove(startPosition, piece, move)){
+                legalMoves.add(move);
+            }
+        }
+        return legalMoves;
     }
 
     /**
@@ -112,5 +128,45 @@ public class ChessGame {
      */
     public ChessBoard getBoard() {
         throw new RuntimeException("Not implemented");
+    }
+
+    private ChessBoard copyBoard() {
+        ChessBoard copy = new ChessBoard();
+        for (int r = 1; r <= 8; r++) {
+            for (int c = 1; c <= 8; c++) {
+                ChessPosition pos = new ChessPosition(r, c);
+                ChessPiece piece = board.getPiece(pos);
+                if (piece != null) {
+                    copy.addPiece(pos, new ChessPiece(piece.getTeamColor(), piece.getPieceType()));
+                }
+                else {
+                    copy.addPiece(pos, null);
+                }
+            }
+        }
+        return copy;
+    }
+
+    private boolean safeMove (ChessPosition from, ChessPiece mover, ChessMove move) {
+        ChessBoard sim = copyBoard();
+
+        ChessPiece.PieceType promotion = move.getPromotionPiece();
+        ChessPiece.PieceType finalType;
+
+        if(promotion != null) {
+            finalType = promotion;
+        }
+
+        else {
+            finalType = mover.getPieceType();
+        }
+
+        sim.addPiece(from, null);
+        ChessPiece newPiece =new ChessPiece(mover.getTeamColor(), finalType);
+        sim.addPiece(move.getEndPosition(), newPiece);
+
+        ChessGame checkGame = new ChessGame();
+        checkGame.setBoard(sim);
+        return !checkGame.isInCheck(mover.getTeamColor());
     }
 }
