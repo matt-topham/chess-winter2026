@@ -210,4 +210,19 @@ public class ChessGame {
         checkGame.setBoard(sim);
         return !checkGame.isInCheck(mover.getTeamColor());
     }
+
+    private ChessPosition findKing (TeamColor color) {
+        for (int r = 1; r <= 8; r++) {
+            for (int c = 1; c <= 8; c++) {
+                ChessPosition pos = new ChessPosition(r, c);
+                ChessPiece piece = board.getPiece(pos);
+                if (piece != null
+                        && piece.getTeamColor() == color
+                        && piece.getPieceType() == ChessPiece.PieceType.KING) {
+                    return pos;
+                }
+            }
+        }
+        return null;
+    }
 }
