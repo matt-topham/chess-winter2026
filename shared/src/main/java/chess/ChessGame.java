@@ -17,6 +17,16 @@ public class ChessGame {
     private ChessBoard board;
     private boolean gameOver =  false;
 
+    // trackers
+    private boolean wKingMoved = false;
+    private boolean bKingMoved = false;
+    private boolean wRookAMoved = false;
+    private boolean wRookHMoved = false;
+    private boolean bRookAMoved = false;
+    private boolean bRookHMoved = false;
+
+
+
     public ChessGame() {
         this.board = new ChessBoard();
         this.board.resetBoard();
@@ -271,6 +281,17 @@ public class ChessGame {
             }
         }
         return false;
+    }
+
+    private boolean isCastleMove(ChessPiece mover, ChessMove move) {
+        if (mover == null || mover.getPieceType() != ChessPiece.PieceType.KING) {
+            return false;
+        }
+        ChessPosition from = move.getStartPosition();
+        ChessPosition to = move.getEndPosition();
+
+        return from.getRow() == to.getRow()
+                && (to.getColumn() - from.getColumn() == 2 || to.getColumn() - from.getColumn() == -2);
     }
 
     @Override
