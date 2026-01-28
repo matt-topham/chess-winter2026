@@ -294,6 +294,104 @@ public class ChessGame {
                 && (to.getColumn() - from.getColumn() == 2 || to.getColumn() - from.getColumn() == -2);
     }
 
+    private Collection<ChessMove> castleMoves (ChessPosition kingPos, TeamColor color) {
+        List<ChessMove> moves = new ArrayList<>();
+
+        int homeRow = (color == TeamColor.WHITE) ? 1 : 8;
+        if (kingPos.getRow() != homeRow || kingPos.getColumn() != 5) {
+            return moves;
+        }
+
+        if (wKingMoved && color == TeamColor.WHITE) {
+            return moves;
+        }
+        if (bKingMoved && color == TeamColor.BLACK) {
+            return moves;
+        }
+
+        if(isInCheck(color)) {
+            return moves;
+        }
+
+        if(canCastle(color, true)) {
+            moves.add(new ChessMove(kingPos, new ChessPosition(homeRow, 7), null));
+        }
+
+        if(canCastle(color, false)) {
+            moves.add(new ChessMove(kingPos, new ChessPosition(homeRow, 3), null));
+        }
+
+        return moves;
+    }
+
+    private boolean canCastle(TeamColor color, boolean kingSide) {
+        int row = (color == TeamColor.WHITE) ? 1 : 8;
+        TeamColor opp = opponent(color);
+
+        if (kingSide) {
+            if ((color == TeamColor.WHITE && wRookHMoved) || (color == TeamColor.BLACK && bRookHMoved)) return false;
+            ChessPiece rook = board.getPiece(new ChessPosition(row, 8));
+            if (rook == null || rook.getTeamColor() != color || rook.getPieceType() != ChessPiece.PieceType.ROOK) return false;
+
+            if (board.getPiece(new ChessPosition(row, 6)) != null) return false;
+            if (board.getPiece(new ChessPosition(row, 7)) != null) return false;
+
+            if (isSquareAttacked(new ChessPosition(row, 6), opp)) return false;
+            if (isSquareAttacked(new ChessPosition(row, 7), opp)) return false;
+
+            return true;
+        }
+        else {
+            if ((color == TeamColor.WHITE && wRookAMoved) || (color == TeamColor.BLACK && bRookAMoved)) return false;
+            ChessPiece rook = board.getPiece(new ChessPosition(row, 1));
+            if (rook == null || rook.getTeamColor() != color || rook.getPieceType() != ChessPiece.PieceType.ROOK) return false;
+
+            if (board.getPiece(new ChessPosition(row, 2)) != null) return false;
+            if (board.getPiece(new ChessPosition(row, 3)) != null) return false;
+            if (board.getPiece(new ChessPosition(row, 4)) != null) return false;
+
+            if (isSquareAttacked(new ChessPosition(row, 4), opp)) return false;
+            if (isSquareAttacked(new ChessPosition(row, 3), opp)) return false;
+
+            return true;
+        }
+    }
+
+    private boolean isSquareAttacked(ChessPosition target, TeamColor attacker) {
+        for (int r = 1; r <= 8; r++) {
+            for (int c = 1; c <= 8; c++) {
+                ChessPosition from = new ChessPosition(r, c);
+                ChessPiece p = board.getPiece(from);
+                if (p == null || p.getTeamColor() != attacker) continue;
+
+                switch (p.getPieceType()) {
+                    case PAWN -> {
+                        int dir = (attacker == TeamColor.WHITE) ? 1 : -1;
+                        int tr = r + dir;
+                        if (tr >= 1 && tr <= 8) {
+                            if (target.getRow() == tr && (target.getColumn() == c - 1 || target.getColumn() == c + 1)) {
+                                return true;
+                            }
+                        }
+                    }
+                    case KING -> {
+                        int dr = Math.abs(target.getRow() - r);
+                        int dc = Math.abs(target.getColumn() - c);
+                        if (Math.max(dr, dc) == 1) return true;
+                    }
+                    default -> {
+                        Collection<ChessMove> pseudo = p.pieceMoves(board, from);
+                        if (pseudo == null) continue;
+                        for (ChessMove m : pseudo) {
+                            if (target.equals(m.getEndPosition())) return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) {
