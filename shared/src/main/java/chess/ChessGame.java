@@ -74,6 +74,11 @@ public class ChessGame {
         if (potential == null) {
             return legalMoves;
         }
+
+        if (piece.getPieceType() == ChessPiece.PieceType.KING) {
+            potential.addAll(castleMoves(startPosition, piece.getTeamColor()));
+        }
+
         for(ChessMove move : potential) {
             if (safeMove(startPosition, piece, move)){
                 legalMoves.add(move);
@@ -108,6 +113,12 @@ public class ChessGame {
             throw new InvalidMoveException("Illegal move: " + move);
         }
 
+        ChessPosition to = move.getEndPosition();
+        ChessPiece captured = board.getPiece(to);
+        boolean castle = isCastleMove(mover, move);
+
+        updateCastlingPermissionsOnCapture(captured, to);
+
         ChessPiece.PieceType finalType;
 
         if (move.getPromotionPiece() != null) {
@@ -118,8 +129,15 @@ public class ChessGame {
             finalType = mover.getPieceType();
         }
 
+        updateCastlingPermissionsOnMove(mover, from);
+
         board.addPiece(from, null);
         board.addPiece(move.getEndPosition(), new ChessPiece(mover.getTeamColor(), finalType));
+
+        if (castle) {
+            performCastleRookMove(from, to, mover.getTeamColor(), board);
+            markRookMovedByCastle(mover.getTeamColor(), to);
+        }
 
         teamTurn = opponent(teamTurn);
     }
@@ -409,6 +427,35 @@ public class ChessGame {
             board.addPiece(new ChessPosition(r, 4), new ChessPiece(color, ChessPiece.PieceType.ROOK));
         }
 
+    }
+
+    private void updateCastlingPermissionsOnMove(ChessPiece mover, ChessPosition from) {
+        if (mover.getPieceType() == ChessPiece.PieceType.KING) {
+            if (mover.getTeamColor() == TeamColor.WHITE) {
+                wKingMoved = true;
+            }
+            else {
+                bKingMoved = true;
+            }
+        }
+        if (mover.getPieceType() == ChessPiece.PieceType.ROOK) {
+            if (mover.getTeamColor() == TeamColor.WHITE) {
+                if (from.getRow() == 1 && from.getColumn() == 1) {
+                    wRookAMoved = true;
+                }
+                if (from.getRow() == 1 && from.getColumn() == 8) {
+                    wRookHMoved = true;
+                }
+            }
+            else {
+                if (from.getRow() == 8 && from.getColumn() == 1) {
+                    bRookAMoved = true;
+                }
+                if (from.getRow() == 8 && from.getColumn() == 8) {
+                    bRookHMoved = true;
+                }
+            }
+        }
     }
 
     @Override
