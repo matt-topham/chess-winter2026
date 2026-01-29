@@ -392,6 +392,25 @@ public class ChessGame {
         return false;
     }
 
+    private void performCastleRookMove(ChessPosition kingFrom,
+                                       ChessPosition kingTo,
+                                       ChessGame.TeamColor color,
+                                       ChessBoard board) {
+        int r = kingFrom.getRow();
+        int toCol = kingTo.getColumn();
+
+        if (toCol == 7){
+            board.addPiece(new ChessPosition(r, 8), null);
+            board.addPiece(new ChessPosition(r, 6), new ChessPiece(color, ChessPiece.PieceType.ROOK));
+        }
+
+        if (toCol == 3){
+            board.addPiece(new ChessPosition(r, 1), null);
+            board.addPiece(new ChessPosition(r, 4), new ChessPiece(color, ChessPiece.PieceType.ROOK));
+        }
+
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) {
