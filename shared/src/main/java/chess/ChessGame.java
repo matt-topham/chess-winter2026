@@ -458,6 +458,48 @@ public class ChessGame {
         }
     }
 
+    private void updateCastlingPermissionsOnCapture(ChessPiece captured, ChessPosition at) {
+        if (captured == null || captured.getPieceType() != ChessPiece.PieceType.ROOK) {
+            return;
+        }
+        if (captured.getTeamColor() == TeamColor.WHITE) {
+            if (at.getRow() == 1 && at.getColumn() == 1) {
+                wRookAMoved = true;
+            }
+            if (at.getRow() == 1 && at.getColumn() == 8) {
+                wRookHMoved = true;
+            }
+        }
+        else {
+            if (at.getRow() == 8 && at.getColumn() == 1) {
+                bRookAMoved = true;
+            }
+            if (at.getRow() == 8 && at.getColumn() == 8) {
+                bRookHMoved = true;
+            }
+        }
+    }
+
+    private void markRookMovedByCastle(TeamColor color, ChessPosition kingTo) {
+        boolean kingSide = (kingTo.getColumn() == 7);
+        if(color == TeamColor.WHITE){
+            if (kingSide) {
+                wRookHMoved = true;
+            }
+            else {
+                wRookAMoved = true;
+            }
+        }
+        else {
+            if (kingSide) {
+                bRookHMoved = true;
+            }
+            else {
+                bRookAMoved = true;
+            }
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) {
