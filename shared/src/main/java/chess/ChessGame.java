@@ -406,7 +406,9 @@ public class ChessGame {
             for (int c = 1; c <= 8; c++) {
                 ChessPosition from = new ChessPosition(r, c);
                 ChessPiece p = board.getPiece(from);
-                if (p == null || p.getTeamColor() != attacker) continue;
+                if (p == null || p.getTeamColor() != attacker) {
+                    continue;
+                }
 
                 switch (p.getPieceType()) {
                     case PAWN -> {
@@ -421,13 +423,19 @@ public class ChessGame {
                     case KING -> {
                         int dr = Math.abs(target.getRow() - r);
                         int dc = Math.abs(target.getColumn() - c);
-                        if (Math.max(dr, dc) == 1) return true;
+                        if (Math.max(dr, dc) == 1) {
+                            return true;
+                        }
                     }
                     default -> {
                         Collection<ChessMove> pseudo = p.pieceMoves(board, from);
-                        if (pseudo == null) continue;
+                        if (pseudo == null) {
+                            continue;
+                        }
                         for (ChessMove m : pseudo) {
-                            if (target.equals(m.getEndPosition())) return true;
+                            if (target.equals(m.getEndPosition())) {
+                                return true;
+                            }
                         }
                     }
                 }
