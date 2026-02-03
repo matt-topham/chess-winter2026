@@ -347,29 +347,55 @@ public class ChessGame {
         TeamColor opp = opponent(color);
 
         if (kingSide) {
-            if ((color == TeamColor.WHITE && wRookHMoved) || (color == TeamColor.BLACK && bRookHMoved)) return false;
+            if ((color == TeamColor.WHITE && wRookHMoved) || (color == TeamColor.BLACK && bRookHMoved)) {
+                return false;
+            }
             ChessPiece rook = board.getPiece(new ChessPosition(row, 8));
-            if (rook == null || rook.getTeamColor() != color || rook.getPieceType() != ChessPiece.PieceType.ROOK) return false;
+            if (rook == null || rook.getTeamColor() != color || rook.getPieceType() != ChessPiece.PieceType.ROOK) {
+                return false;
+            }
 
-            if (board.getPiece(new ChessPosition(row, 6)) != null) return false;
-            if (board.getPiece(new ChessPosition(row, 7)) != null) return false;
+            if (board.getPiece(new ChessPosition(row, 6)) != null) {
+                return false;
+            }
+            if (board.getPiece(new ChessPosition(row, 7)) != null) {
+                return false;
+            }
 
-            if (isSquareAttacked(new ChessPosition(row, 6), opp)) return false;
-            if (isSquareAttacked(new ChessPosition(row, 7), opp)) return false;
+            if (isSquareAttacked(new ChessPosition(row, 6), opp)) {
+                return false;
+            }
+            if (isSquareAttacked(new ChessPosition(row, 7), opp)) {
+                return false;
+            }
 
             return true;
         }
         else {
-            if ((color == TeamColor.WHITE && wRookAMoved) || (color == TeamColor.BLACK && bRookAMoved)) return false;
+            if ((color == TeamColor.WHITE && wRookAMoved) || (color == TeamColor.BLACK && bRookAMoved)) {
+                return false;
+            }
             ChessPiece rook = board.getPiece(new ChessPosition(row, 1));
-            if (rook == null || rook.getTeamColor() != color || rook.getPieceType() != ChessPiece.PieceType.ROOK) return false;
+            if (rook == null || rook.getTeamColor() != color || rook.getPieceType() != ChessPiece.PieceType.ROOK) {
+                return false;
+            }
 
-            if (board.getPiece(new ChessPosition(row, 2)) != null) return false;
-            if (board.getPiece(new ChessPosition(row, 3)) != null) return false;
-            if (board.getPiece(new ChessPosition(row, 4)) != null) return false;
+            if (board.getPiece(new ChessPosition(row, 2)) != null) {
+                return false;
+            }
+            if (board.getPiece(new ChessPosition(row, 3)) != null) {
+                return false;
+            }
+            if (board.getPiece(new ChessPosition(row, 4)) != null) {
+                return false;
+            }
 
-            if (isSquareAttacked(new ChessPosition(row, 4), opp)) return false;
-            if (isSquareAttacked(new ChessPosition(row, 3), opp)) return false;
+            if (isSquareAttacked(new ChessPosition(row, 4), opp)) {
+                return false;
+            }
+            if (isSquareAttacked(new ChessPosition(row, 3), opp)) {
+                return false;
+            }
 
             return true;
         }
