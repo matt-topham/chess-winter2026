@@ -7,7 +7,6 @@ import chess.ChessGame;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -100,7 +99,13 @@ public class MemoryDataAccess implements DataAccess {
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
-
+        if (game == null) {
+            throw new DataAccessException("updateGame: game is null");
+        }
+        if (!gamesById.containsKey(game.gameID())) {
+            throw new DataAccessException("updateGame: gameID does not exist: " + game.gameID());
+        }
+        gamesById.put(game.gameID(), game);
     }
 
 }
