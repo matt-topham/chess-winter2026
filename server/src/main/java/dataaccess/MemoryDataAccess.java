@@ -60,7 +60,10 @@ public class MemoryDataAccess implements DataAccess {
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
-
+        if (authToken == null) {
+            return;
+        }
+        authByToken.remove(authToken);
     }
 
     @Override
