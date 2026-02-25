@@ -89,7 +89,7 @@ public class MemoryDataAccess implements DataAccess {
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
-        return null;
+        return gamesById.get(gameID);
     }
 
     @Override
