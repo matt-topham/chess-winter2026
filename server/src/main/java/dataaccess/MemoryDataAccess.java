@@ -5,6 +5,7 @@ import model.UserData;
 import model.GameData;
 import chess.ChessGame;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -94,7 +95,7 @@ public class MemoryDataAccess implements DataAccess {
 
     @Override
     public Collection<GameData> listGames() throws DataAccessException {
-        return List.of();
+        return new ArrayList<>(gamesById.values());
     }
 
     @Override
