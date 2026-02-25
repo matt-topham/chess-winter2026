@@ -68,7 +68,23 @@ public class MemoryDataAccess implements DataAccess {
 
     @Override
     public int insertGame(GameData data) throws DataAccessException {
-        return 0;
+        if (data == null) {
+            throw new DataAccessException("insertGame: data is null");
+        }
+
+        int id = nextGameId.getAndIncrement();
+        ChessGame game = (data.game() != null) ? data.game() : new ChessGame();
+
+        GameData stored = new GameData(
+                id,
+                data.whiteUsername(),
+                data.blackUsername(),
+                data.gameName(),
+                game
+        );
+
+        gamesById.put(id, stored);
+        return id;
     }
 
     @Override
