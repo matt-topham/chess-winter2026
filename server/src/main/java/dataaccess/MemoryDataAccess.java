@@ -52,7 +52,10 @@ public class MemoryDataAccess implements DataAccess {
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
-        return null;
+        if (authToken == null) {
+            return null;
+        }
+        return authByToken.get(authToken);
     }
 
     @Override
