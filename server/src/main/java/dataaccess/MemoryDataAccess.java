@@ -28,7 +28,10 @@ public class MemoryDataAccess implements DataAccess {
 
     @Override
     public void insertUser(UserData user) throws DataAccessException {
-
+        if (user == null || user.username() == null) {
+            throw new DataAccessException("insertUser: user/username is null");
+        }
+        usersByUsername.put(user.username(), user);
     }
 
     @Override
