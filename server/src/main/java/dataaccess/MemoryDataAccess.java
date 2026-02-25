@@ -36,7 +36,10 @@ public class MemoryDataAccess implements DataAccess {
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
-        return null;
+        if (username == null) {
+            return null;
+        }
+        return usersByUsername.get(username);
     }
 
     @Override
