@@ -7,7 +7,7 @@ import dataaccess.AlreadyTakenException;
 import model.AuthData;
 import model.UserData;
 
-import static org.junit.platform.commons.util.StringUtils.isBlank;
+import java.util.UUID;
 
 public class UserService {
 
@@ -33,5 +33,17 @@ public class UserService {
         if (alreadyExists != null) {
             throw new AlreadyTakenException("403 Error: Already taken");
         }
+
+        UserData user = new UserData(request.username(), request.password(), request.email());
+        data.insertUser(user);
+
+        String token = UUID.randomUUID().toString();
+        data.insertAuth(new AuthData(token, request.username()));
+
+        return new RegisterResult(request.username(), token);
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
     }
 }
