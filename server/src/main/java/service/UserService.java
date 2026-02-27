@@ -1,11 +1,9 @@
 package service;
 
-import dataaccess.DataAccess;
-import dataaccess.DataAccessException;
-import dataaccess.BadRequestException;
-import dataaccess.AlreadyTakenException;
+import dataaccess.*;
 import model.AuthData;
 import model.UserData;
+import org.eclipse.jetty.server.Authentication;
 
 import java.util.UUID;
 
@@ -41,6 +39,31 @@ public class UserService {
         data.insertAuth(new AuthData(token, request.username()));
 
         return new RegisterResult(request.username(), token);
+    }
+
+    public LoginResult login(LoginRequest request)
+        throws UnauthorizedException, BadRequestException, DataAccessException {
+
+        //400
+        if (request == null
+                || isBlank(request.username())
+                || isBlank(request.password())) {
+            throw new BadRequestException("400 Error: Bad request");
+        }
+
+        //401
+        UserData user = data.getUser(request.username());
+        if (user == null
+                || user.password() == null
+                || !user.password().equals(request.password())) {
+            throw new UnauthorizedException("401 Error: unauthorized");
+        }
+
+        String token = UUID.randomUUID().toString();
+        data.insertAuth(new AuthData(token, request.username()));
+
+        return new LoginResult(request.username(), token);
+
     }
 
     private static boolean isBlank(String s) {
