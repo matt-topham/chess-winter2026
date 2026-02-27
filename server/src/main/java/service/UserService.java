@@ -56,7 +56,7 @@ public class UserService {
         if (user == null
                 || user.password() == null
                 || !user.password().equals(request.password())) {
-            throw new UnauthorizedException("401 Error: unauthorized");
+            throw new UnauthorizedException("401 Error: Unauthorized");
         }
 
         String token = UUID.randomUUID().toString();
@@ -64,6 +64,20 @@ public class UserService {
 
         return new LoginResult(request.username(), token);
 
+    }
+
+    public void logout(LogoutRequest request)
+            throws UnauthorizedException, DataAccessException {
+        if (request == null || isBlank(request.authToken())) {
+            throw new UnauthorizedException("401 Error: Unauthorized");
+        }
+
+        var auth = data.getAuth(request.authToken());
+        if (auth == null) {
+            throw new UnauthorizedException("401 Error: Unauthorized");
+        }
+
+        data.deleteAuth(request.authToken());
     }
 
     private static boolean isBlank(String s) {
