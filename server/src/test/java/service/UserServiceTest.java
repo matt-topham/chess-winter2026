@@ -70,4 +70,19 @@ public class UserServiceTest {
         assertThrows(UnauthorizedException.class, ()->
                 service.login(new LoginRequest("matt", "asdf")));
     }
+
+    @Test
+    void logoutPositive() throws Exception {
+        DataAccess data = new MemoryDataAccess();
+        UserService service = new UserService(data);
+
+        service.register(new RegisterRequest("matt", "pw", "matt@email.com"));
+        var login = service.login(new LoginRequest("matt", "pw"));
+
+        assertNotNull(data.getAuth(login.authToken()));
+
+        service.logout(new LogoutRequest(login.authToken()));
+
+        assertNull(data.getAuth(login.authToken()));
+    }
 }
