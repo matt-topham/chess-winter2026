@@ -43,4 +43,19 @@ public class UserServiceTest {
         assertThrows(AlreadyTakenException.class, ()->
             service.register(new RegisterRequest("matt", "pw", "matt@email.com")));
     }
+
+    @Test
+    void loginPositive() throws Exception {
+        DataAccess data = new MemoryDataAccess();
+        UserService service = new UserService(data);
+
+        service.register(new RegisterRequest("matt", "pw", "matt@email.com"));
+
+        LoginResult result = service.login(new LoginRequest("matt", "pw"));
+
+        assertEquals("matt", result.username());
+        assertNotNull(result.authToken());
+        assertNotNull(data.getAuth(result.authToken()));
+        assertEquals("matt", data.getAuth(result.authToken()).username());
+    }
 }
