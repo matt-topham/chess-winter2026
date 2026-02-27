@@ -85,4 +85,13 @@ public class UserServiceTest {
 
         assertNull(data.getAuth(login.authToken()));
     }
+
+    @Test
+    void logoutNegative() throws Exception {
+        DataAccess data = new MemoryDataAccess();
+        UserService service = new UserService(data);
+
+        assertThrows(UnauthorizedException.class, () ->
+                service.logout(new LogoutRequest("fake_token")));
+    }
 }
