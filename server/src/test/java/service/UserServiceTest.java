@@ -3,6 +3,7 @@ package service;
 import dataaccess.AlreadyTakenException;
 import dataaccess.DataAccess;
 import dataaccess.MemoryDataAccess;
+import dataaccess.UnauthorizedException;
 import model.AuthData;
 import model.UserData;
 import org.junit.jupiter.api.Test;
@@ -57,5 +58,16 @@ public class UserServiceTest {
         assertNotNull(result.authToken());
         assertNotNull(data.getAuth(result.authToken()));
         assertEquals("matt", data.getAuth(result.authToken()).username());
+    }
+
+    @Test
+    void loginNegative() throws Exception {
+        DataAccess data = new MemoryDataAccess();
+        UserService service = new UserService(data);
+
+        service.register(new RegisterRequest("matt", "pw", "matt@email.com"));
+
+        assertThrows(UnauthorizedException.class, ()->
+                service.login(new LoginRequest("matt", "asdf")));
     }
 }
