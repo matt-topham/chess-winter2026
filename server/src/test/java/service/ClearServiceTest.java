@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ClearServiceTest {
 
     @Test
-    void clear_positive_clearsAllData() throws Exception {
+    void clearPositiveClearsAllData() throws Exception {
         DataAccess data = new MemoryDataAccess();
 
         data.insertUser(new UserData("matt", "pw", "matt@email.com"));
