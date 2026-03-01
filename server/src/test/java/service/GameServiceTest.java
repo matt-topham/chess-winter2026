@@ -1,9 +1,6 @@
 package service;
 
-import dataaccess.BadRequestException;
-import dataaccess.DataAccess;
-import dataaccess.MemoryDataAccess;
-import dataaccess.UnauthorizedException;
+import dataaccess.*;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -74,5 +71,20 @@ public class GameServiceTest {
         gameService.joinGame(new JoinGameRequest(token, gameID, "WHITE"));
 
         assertEquals("matt", data.getGame(gameID).whiteUsername());
+    }
+
+    @Test
+    void joinGameNegative() throws Exception {
+        DataAccess data = new MemoryDataAccess();
+        UserService userService = new UserService(data);
+        GameService gameService = new GameService(data);
+
+        String token = registerAndLogin(userService);
+
+        int gameID = gameService.createGame(new CreateGameRequest(token, "Game1")).gameID();
+        gameService.joinGame(new JoinGameRequest(token, gameID, "WHITE"));
+
+        assertThrows(AlreadyTakenException.class, () ->
+                gameService.joinGame(new JoinGameRequest(token, gameID, "WHITE")));
     }
 }
