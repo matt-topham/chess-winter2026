@@ -1,5 +1,6 @@
 package service;
 
+import dataaccess.BadRequestException;
 import dataaccess.DataAccess;
 import dataaccess.MemoryDataAccess;
 import dataaccess.UnauthorizedException;
@@ -47,5 +48,17 @@ public class GameServiceTest {
         assertTrue(res.gameID() > 0);
         assertNotNull(data.getGame(res.gameID()));
         assertEquals("Game", data.getGame(res.gameID()).gameName());
+    }
+
+    @Test
+    void createGameNegative() throws Exception {
+        DataAccess data = new MemoryDataAccess();
+        UserService userService = new UserService(data);
+        GameService gameService = new GameService(data);
+
+        String token = registerAndLogin(userService);
+
+        assertThrows(BadRequestException.class, () ->
+                gameService.createGame(new CreateGameRequest(token, "    ")));
     }
 }
