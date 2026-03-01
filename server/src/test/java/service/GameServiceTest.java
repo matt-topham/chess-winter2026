@@ -34,4 +34,18 @@ public class GameServiceTest {
         assertThrows(UnauthorizedException.class, () ->
                 gameService.listGames("nope"));
     }
+
+    @Test
+    void createGamePositive() throws Exception {
+        DataAccess data = new MemoryDataAccess();
+        UserService userService = new UserService(data);
+        GameService gameService = new GameService(data);
+
+        String token = registerAndLogin(userService);
+
+        var res = gameService.createGame(new CreateGameRequest(token, "Game"));
+        assertTrue(res.gameID() > 0);
+        assertNotNull(data.getGame(res.gameID()));
+        assertEquals("Game", data.getGame(res.gameID()).gameName());
+    }
 }
