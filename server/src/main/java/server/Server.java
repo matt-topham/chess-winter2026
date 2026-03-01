@@ -1,8 +1,6 @@
 package server;
 
-import dataaccess.DataAccess;
-import dataaccess.DataAccessException;
-import dataaccess.MemoryDataAccess;
+import dataaccess.*;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import com.google.gson.Gson;
@@ -69,6 +67,24 @@ public class Server {
             gameService.joinGame(new JoinGameRequest(token, body.gameID(), body.playerColor()));
             okEmpty(ctx);
         });
+
+        javalin.exception(BadRequestException.class,
+                (e, ctx) -> err(ctx, 400, "Error: Bad request"));
+        javalin.exception(UnauthorizedException.class,
+                (e, ctx) -> err(ctx, 401, "Error: Unauthorized"));
+        javalin.exception(AlreadyTakenException.class,
+                (e, ctx) -> err(ctx, 403, "Error: Already taken"));
+        javalin.exception(DataAccessException.class,
+                (e, ctx) -> err(ctx, 500, "Error: " + safeMsg(e)));
+        javalin.exception(Exception.class,
+                (e, ctx) -> err(ctx, 500, "Error: " + safeMsg(e)));
+    }
+    private static String safeMsg(Exception e) {
+        return(e.getMessage() == null || e.getMessage().isBlank() ? "unknown error" : e.getMessage());
+    }
+
+    private static void err(Context ctx, int status, String message) {
+        ctx.status(status).json(Map.of("message", message));
     }
 
     private static void okEmpty(Context ctx) {
