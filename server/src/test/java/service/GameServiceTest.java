@@ -61,4 +61,18 @@ public class GameServiceTest {
         assertThrows(BadRequestException.class, () ->
                 gameService.createGame(new CreateGameRequest(token, "    ")));
     }
+
+    @Test
+    void joinGamePositive () throws Exception {
+        DataAccess data = new MemoryDataAccess();
+        UserService userService = new UserService(data);
+        GameService gameService = new GameService(data);
+
+        String token = registerAndLogin(userService);
+
+        int gameID = gameService.createGame(new CreateGameRequest(token, "Game1")).gameID();
+        gameService.joinGame(new JoinGameRequest(token, gameID, "WHITE"));
+
+        assertEquals("matt", data.getGame(gameID).whiteUsername());
+    }
 }
