@@ -1,10 +1,7 @@
 package service;
 
 import chess.ChessGame;
-import dataaccess.BadRequestException;
-import dataaccess.DataAccess;
-import dataaccess.DataAccessException;
-import dataaccess.UnauthorizedException;
+import dataaccess.*;
 import model.GameData;
 
 import java.util.Collection;
@@ -33,6 +30,44 @@ public class GameService {
         GameData game = new GameData(0, null, null, req.gameName(), new ChessGame());
         int id = data.insertGame(game);
         return new CreateGameResult(id);
+    }
+
+    public void joinGame(JoinGameRequest request)
+            throws BadRequestException, UnauthorizedException, AlreadyTakenException, DataAccessException {
+        if (request == null) {
+            throw new BadRequestException("400 Error: Bad request");
+        }
+
+        String username = requireValidAuth(request.authToken());
+
+        if (request.gameID() <= 0 || isBlank(request.playerColor())) {
+            throw new BadRequestException("400 Error: Bad request");
+        }
+
+        String color = request.playerColor().trim().toUpperCase();
+        if (!color.equals("WHITE") && !color.equals("BLACK")) {
+            throw new BadRequestException("400 Error: Bad request");
+        }
+
+        GameData game = data.getGame(request.gameID());
+        if (game == null) {
+            throw new BadRequestException("400 Error: Bad request");
+        }
+
+        if (color.equals("WHITE")) {
+            if (game.whiteUsername() != null) {
+                throw new AlreadyTakenException("403 Error: Already taken");
+            }
+            game = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game());
+        }
+        else {
+            if (game.blackUsername() != null) {
+                throw new AlreadyTakenException("403 Error: Already taken");
+            }
+            game = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());
+        }
+
+        data.updateGame(game);
     }
 
     private String requireValidAuth(String token)
