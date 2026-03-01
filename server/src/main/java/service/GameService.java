@@ -1,5 +1,7 @@
 package service;
 
+import chess.ChessGame;
+import dataaccess.BadRequestException;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import dataaccess.UnauthorizedException;
@@ -19,6 +21,18 @@ public class GameService {
         requireValidAuth(authToken);
         Collection<GameData> games = data.listGames();
         return new ListGameResult(games);
+    }
+
+    public CreateGameResult createGame(CreateGameRequest req)
+            throws BadRequestException, UnauthorizedException, DataAccessException {
+        if (req == null || isBlank(req.gameName())) {
+            throw new BadRequestException("400 Error: Bad request");
+        }
+        String username = requireValidAuth(req.authToken());
+
+        GameData game = new GameData(0, null, null, req.gameName(), new ChessGame());
+        int id = data.insertGame(game);
+        return new CreateGameResult(id);
     }
 
     private String requireValidAuth(String token)
