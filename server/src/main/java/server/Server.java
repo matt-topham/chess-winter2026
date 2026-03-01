@@ -31,13 +31,13 @@ public class Server {
         javalin.post("/user", ctx -> {
             RegisterRequest request = gson.fromJson(ctx.body(), RegisterRequest.class);
             RegisterResult result = userService.register(request);
-            ctx.status(200).json(result);
+            okJson(ctx, result);
         });
         // Login
         javalin.post("/session", ctx -> {
             LoginRequest request = gson.fromJson(ctx.body(), LoginRequest.class);
             LoginResult result = userService.login(request);
-            ctx.status(200).json(result);
+            okJson(ctx, result);
         });
         // Logout
         javalin.delete("/session", ctx -> {
@@ -49,15 +49,15 @@ public class Server {
         javalin.get("/game", ctx -> {
             String token = ctx.header("authorization");
             ListGameResult result = gameService.listGames(token);
-            ctx.status(200).json(result);
+            okJson(ctx, result);
         });
         // Create game
-        javalin.get("/game", ctx -> {
+        javalin.post("/game", ctx -> {
             String token = ctx.header("authorization");
             CreateGameRequest body = gson.fromJson(ctx.body(), CreateGameRequest.class);
 
             CreateGameResult result = gameService.createGame(new CreateGameRequest(token, body.gameName()));
-            ctx.status(200).json(result);
+            okJson(ctx, result);
         });
         // Join game
         javalin.put("/game", ctx -> {
@@ -79,16 +79,27 @@ public class Server {
         javalin.exception(Exception.class,
                 (e, ctx) -> err(ctx, 500, "Error: " + safeMsg(e)));
     }
+
+    private void okJson(Context ctx, Object obj) {
+        ctx.status(200);
+        ctx.contentType("application/json");
+        ctx.result(gson.toJson(obj));
+    }
+
     private static String safeMsg(Exception e) {
         return(e.getMessage() == null || e.getMessage().isBlank() ? "unknown error" : e.getMessage());
     }
 
-    private static void err(Context ctx, int status, String message) {
-        ctx.status(status).json(Map.of("message", message));
+    private void err(Context ctx, int status, String message) {
+        ctx.status(status);
+        ctx.contentType("application/json");
+        ctx.result(gson.toJson(Map.of("message", message)));
     }
 
     private static void okEmpty(Context ctx) {
-        ctx.status(200).json(Map.of());
+        ctx.status(200);
+        ctx.contentType("application/json");
+        ctx.result("{}");
     }
 
     public int run(int desiredPort) {
