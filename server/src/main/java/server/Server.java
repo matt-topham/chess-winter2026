@@ -61,6 +61,14 @@ public class Server {
             CreateGameResult result = gameService.createGame(new CreateGameRequest(token, body.gameName()));
             ctx.status(200).json(result);
         });
+        // Join game
+        javalin.put("/game", ctx -> {
+            String token = ctx.header("authorization");
+            JoinGameRequest body = gson.fromJson(ctx.body(), JoinGameRequest.class);
+
+            gameService.joinGame(new JoinGameRequest(token, body.gameID(), body.playerColor()));
+            okEmpty(ctx);
+        });
     }
 
     private static void okEmpty(Context ctx) {
