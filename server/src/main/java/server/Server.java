@@ -41,7 +41,26 @@ public class Server {
             LoginResult result = userService.login(request);
             ctx.status(200).json(result);
         });
+        // Logout
+        javalin.delete("/session", ctx -> {
+            String token = ctx.header("authorization");
+            userService.logout(new LogoutRequest(token));
+            okEmpty(ctx);
+        });
+        // List games
+        javalin.get("/game", ctx -> {
+            String token = ctx.header("authorization");
+            ListGameResult result = gameService.listGames(token);
+            ctx.status(200).json(result);
+        });
+        // Create game
+        javalin.get("/game", ctx -> {
+            String token = ctx.header("authorization");
+            CreateGameRequest body = gson.fromJson(ctx.body(), CreateGameRequest.class);
 
+            CreateGameResult result = gameService.createGame(new CreateGameRequest(token, body.gameName()));
+            ctx.status(200).json(result);
+        });
     }
 
     private static void okEmpty(Context ctx) {
