@@ -3,7 +3,6 @@ package passoff.server;
 import chess.ChessGame;
 import org.junit.jupiter.api.*;
 import passoff.model.*;
-import passoff.server.TestServerFacade;
 import server.Server;
 
 import java.net.HttpURLConnection;
@@ -78,8 +77,8 @@ public class StandardAPITests {
     @DisplayName("Login Bad Request")
     public void loginBadRequest() {
         TestUser[] incompleteLoginRequests = {
-            new TestUser(null, existingUser.getPassword()),
-            new TestUser(existingUser.getUsername(), null),
+                new TestUser(null, existingUser.getPassword()),
+                new TestUser(existingUser.getUsername(), null),
         };
 
         for (TestUser incompleteLoginRequest : incompleteLoginRequests) {
