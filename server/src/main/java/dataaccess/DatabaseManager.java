@@ -52,6 +52,11 @@ public class DatabaseManager {
         }
     }
 
+    public static void initialize() throws DataAccessException {
+        createDatabase();
+        createTables();
+    }
+
     /**
      * Create a connection to the database and sets the catalog based upon the
      * properties specified in db.properties. Connections to the database should
@@ -96,5 +101,18 @@ public class DatabaseManager {
         var host = props.getProperty("db.host");
         var port = Integer.parseInt(props.getProperty("db.port"));
         connectionUrl = String.format("jdbc:mysql://%s:%d", host, port);
+    }
+
+    public static void createTables() throws DataAccessException {
+        try (var conn = getConnection();
+             var stmt = conn.createStatement()) {
+
+            stmt.executeUpdate(CREATE_USER_TABLE);
+            stmt.executeUpdate(CREATE_AUTH_TABLE);
+            stmt.executeUpdate(CREATE_GAME_TABLE);
+
+        } catch (SQLException ex) {
+            throw new DataAccessException("failed to create tables", ex);
+        }
     }
 }
