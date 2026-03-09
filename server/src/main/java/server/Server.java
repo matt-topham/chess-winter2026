@@ -18,7 +18,13 @@ public class Server {
     public Server() {
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
-        DataAccess data = new MemoryDataAccess();
+        try {
+            DatabaseManager.initialize();
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
+
+        DataAccess data = new MySqlDataAccess();
         ClearService clearService = new ClearService(data);
         UserService userService = new UserService(data);
         GameService gameService = new GameService(data);
