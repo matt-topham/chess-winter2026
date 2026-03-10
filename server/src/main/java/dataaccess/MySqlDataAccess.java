@@ -71,17 +71,54 @@ public class MySqlDataAccess implements DataAccess{
 
     @Override
     public void insertAuth(AuthData auth) throws DataAccessException {
+        String sql = "INSERT INTO auth (auth_token, username) VALUES (?, ?)";
 
+        try (var connection = DatabaseManager.getConnection();
+             var statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, auth.authToken());
+            statement.setString(2, auth.username());
+            statement.executeUpdate();
+
+        } catch (SQLIntegrityConstraintViolationException e) {
+            throw new DataAccessException("auth token already exists", e);
+        } catch (Exception e) {
+            throw dbError("insertAuth", e);
+        }
     }
 
     @Override
-    public AuthData getAuth(String authToken) throws DataAccessException {
-        return null;
+    public AuthData getAuth(String token) throws DataAccessException {
+        String sql = "SELECT auth_token, username FROM auth WHERE auth_token = ?";
+
+        try (var connection = DatabaseManager.getConnection();
+             var statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, token);
+
+            try (var rs = statement.executeQuery()) {
+                if (!rs.next()) return null;
+                return new AuthData(rs.getString("auth_token"), rs.getString("username"));
+            }
+
+        } catch (Exception e) {
+            throw dbError("getAuth", e);
+        }
     }
 
     @Override
-    public void deleteAuth(String authToken) throws DataAccessException {
+    public void deleteAuth(String token) throws DataAccessException {
+        String sql = "DELETE FROM auth WHERE auth_token = ?";
 
+        try (var connection = DatabaseManager.getConnection();
+             var statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, token);
+            statement.executeUpdate();
+
+        } catch (Exception e) {
+            throw dbError("deleteAuth", e);
+        }
     }
 
     @Override

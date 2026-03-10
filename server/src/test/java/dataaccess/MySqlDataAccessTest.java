@@ -59,4 +59,44 @@ public class MySqlDataAccessTest {
     void getUserNegative() throws Exception {
         assertNull(dao.getUser("does_not_exist"));
     }
+
+    @Test
+    void insertAuthPositive() throws Exception {
+        dao.insertUser(new UserData("u1", "hash", "u1@mail.com"));
+        dao.insertAuth(new AuthData("token123", "u1"));
+
+        AuthData a = dao.getAuth("token123");
+        assertNotNull(a);
+        assertEquals("token123", a.authToken());
+        assertEquals("u1", a.username());
+    }
+
+    @Test
+    void insertAuthNegative() throws Exception {
+        dao.insertUser(new UserData("u1", "hash", "u1@mail.com"));
+        dao.insertAuth(new AuthData("token123", "u1"));
+
+        assertThrows(DataAccessException.class, () ->
+                dao.insertAuth(new AuthData("token123", "u1")));
+    }
+
+    @Test
+    void getAuthNegative() throws Exception {
+        assertNull(dao.getAuth("missing_token"));
+    }
+
+    @Test
+    void deleteAuthPositive() throws Exception {
+        dao.insertUser(new UserData("u1", "hash", "u1@mail.com"));
+        dao.insertAuth(new AuthData("token123", "u1"));
+
+        dao.deleteAuth("token123");
+        assertNull(dao.getAuth("token123"));
+    }
+
+    @Test
+    void deleteAuthNegative() throws Exception {
+        dao.deleteAuth("missing_token");
+        assertNull(dao.getAuth("missing_token"));
+    }
 }
