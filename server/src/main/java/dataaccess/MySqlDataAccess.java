@@ -210,7 +210,31 @@ public class MySqlDataAccess implements DataAccess{
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
+        String sql = """
+        UPDATE game
+        SET game_name = ?, white_username = ?, black_username = ?, game_json = ?
+        WHERE game_id = ?
+        """;
 
+        try (var connection = DatabaseManager.getConnection();
+             var statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, game.gameName());
+            statement.setString(2, game.whiteUsername());
+            statement.setString(3, game.blackUsername());
+            statement.setString(4, gson.toJson(game.game()));
+            statement.setInt(5, game.gameID());
+
+            int rows = statement.executeUpdate();
+            if (rows == 0) {
+                throw new DataAccessException("updateGame: game not found");
+            }
+
+        } catch (DataAccessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw dbError("updateGame", e);
+        }
     }
 
     private DataAccessException dbError(String where, Exception e) {
