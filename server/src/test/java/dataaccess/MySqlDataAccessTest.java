@@ -35,4 +35,28 @@ public class MySqlDataAccessTest {
         assertNull(dao.getGame(id));
         assertTrue(dao.listGames().isEmpty());
     }
+
+    @Test
+    void insertUserPositive() throws Exception {
+        dao.insertUser(new UserData("u1", "hash", "u1@mail.com"));
+
+        UserData u = dao.getUser("u1");
+        assertNotNull(u);
+        assertEquals("u1", u.username());
+        assertEquals("u1@mail.com", u.email());
+        assertEquals("hash", u.password());
+    }
+
+    @Test
+    void insertUserNegative() throws Exception {
+        dao.insertUser(new UserData("u1", "hash", "u1@mail.com"));
+
+        assertThrows(DataAccessException.class, () ->
+                dao.insertUser(new UserData("u1", "hash2", "u2@mail.com")));
+    }
+
+    @Test
+    void getUserNegative() throws Exception {
+        assertNull(dao.getUser("does_not_exist"));
+    }
 }
