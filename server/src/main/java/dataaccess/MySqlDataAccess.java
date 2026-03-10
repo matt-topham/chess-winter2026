@@ -5,6 +5,7 @@ import model.AuthData;
 import model.GameData;
 import model.UserData;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Collection;
 import java.util.List;
 
@@ -28,7 +29,21 @@ public class MySqlDataAccess implements DataAccess{
 
     @Override
     public void insertUser(UserData user) throws DataAccessException {
+        String sql = "INSERT INTO user (username, password_hash, email) VALUES (?, ?, ?)";
 
+        try (var connection = DatabaseManager.getConnection();
+             var statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, user.username());
+            statement.setString(2, user.password());
+            statement.setString(3, user.email());
+            statement.executeUpdate();
+
+        } catch (SQLIntegrityConstraintViolationException e) {
+            throw new DataAccessException("user already exists", e);
+        } catch (Exception e) {
+            throw dbError("insertUser", e);
+        }
     }
 
     @Override
