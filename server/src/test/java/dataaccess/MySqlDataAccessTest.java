@@ -8,6 +8,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 
+import java.util.Collection;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class MySqlDataAccessTest {
@@ -98,5 +100,41 @@ public class MySqlDataAccessTest {
     void deleteAuthNegative() throws Exception {
         dao.deleteAuth("missing_token");
         assertNull(dao.getAuth("missing_token"));
+    }
+
+    @Test
+    void insertGamePositive() throws Exception {
+        int id = dao.insertGame(new GameData(0, null, null, "Game1", new ChessGame()));
+
+        GameData g = dao.getGame(id);
+        assertNotNull(g);
+        assertEquals(id, g.gameID());
+        assertEquals("Game1", g.gameName());
+        assertNull(g.whiteUsername());
+        assertNull(g.blackUsername());
+        assertNotNull(g.game());
+    }
+
+    @Test
+    void getGameNegative() throws Exception {
+        assertNull(dao.getGame(9999999));
+    }
+
+    @Test
+    void listGamesPositive() throws Exception {
+        dao.insertGame(new GameData(0, null, null, "A", new ChessGame()));
+        dao.insertGame(new GameData(0, null, null, "B", new ChessGame()));
+
+        Collection<GameData> games = dao.listGames();
+        assertNotNull(games);
+        assertEquals(2, games.size());
+    }
+
+    @Test
+    void listGamesNegative() throws Exception {
+        dao.insertGame(new GameData(0, null, null, "A", new ChessGame()));
+        dao.clear();
+
+        assertTrue(dao.listGames().isEmpty());
     }
 }

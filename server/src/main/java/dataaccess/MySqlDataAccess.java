@@ -1,11 +1,14 @@
 package dataaccess;
 
+import chess.ChessGame;
 import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
 
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -122,18 +125,87 @@ public class MySqlDataAccess implements DataAccess{
     }
 
     @Override
-    public int insertGame(GameData data) throws DataAccessException {
-        return 0;
+    public int insertGame(GameData game) throws DataAccessException {
+        String sql = """
+        INSERT INTO game (game_name, white_username, black_username, game_json)
+        VALUES (?, ?, ?, ?)
+        """;
+
+        try (var connection = DatabaseManager.getConnection();
+             var statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setString(1, game.gameName());
+            statement.setString(2, game.whiteUsername());
+            statement.setString(3, game.blackUsername());
+            statement.setString(4, gson.toJson(game.game()));
+
+            statement.executeUpdate();
+
+            try (var keys = statement.getGeneratedKeys()) {
+                if (keys.next()) return keys.getInt(1);
+            }
+            throw new DataAccessException("insertGame: no generated key");
+
+        } catch (Exception e) {
+            throw dbError("insertGame", e);
+        }
     }
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
-        return null;
+        String sql = """
+        SELECT game_id, game_name, white_username, black_username, game_json
+        FROM game
+        WHERE game_id = ?
+        """;
+
+        try (var connection = DatabaseManager.getConnection();
+             var statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, gameID);
+
+            try (var rs = statement.executeQuery()) {
+                if (!rs.next()) return null;
+
+                ChessGame state = gson.fromJson(rs.getString("game_json"), ChessGame.class);
+
+                return new GameData(
+                        rs.getInt("game_id"),
+                        rs.getString("white_username"),
+                        rs.getString("black_username"),
+                        rs.getString("game_name"),
+                        state
+                );
+            }
+
+        } catch (Exception e) {
+            throw dbError("getGame", e);
+        }
     }
 
     @Override
     public Collection<GameData> listGames() throws DataAccessException {
-        return List.of();
+        String sql = "SELECT game_id, game_name, white_username, black_username, game_json FROM game";
+
+        try (var connection = DatabaseManager.getConnection();
+             var statement = connection.prepareStatement(sql);
+             var rs = statement.executeQuery()) {
+
+            var out = new ArrayList<GameData>();
+            while (rs.next()) {
+                ChessGame state = gson.fromJson(rs.getString("game_json"), ChessGame.class);
+                out.add(new GameData(
+                        rs.getInt("game_id"),
+                        rs.getString("white_username"),
+                        rs.getString("black_username"),
+                        rs.getString("game_name"),
+                        state
+                ));
+            }
+            return out;
+
+        } catch (Exception e) {
+            throw dbError("listGames", e);
+        }
     }
 
     @Override
