@@ -10,7 +10,6 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 public class MySqlDataAccess implements DataAccess{
 
@@ -59,7 +58,9 @@ public class MySqlDataAccess implements DataAccess{
             statement.setString(1, username);
 
             try (var rs = statement.executeQuery()) {
-                if (!rs.next()) return null;
+                if (!rs.next()) {
+                    return null;
+                }
                 return new UserData(
                         rs.getString("username"),
                         rs.getString("password_hash"),
@@ -100,7 +101,9 @@ public class MySqlDataAccess implements DataAccess{
             statement.setString(1, token);
 
             try (var rs = statement.executeQuery()) {
-                if (!rs.next()) return null;
+                if (!rs.next()) {
+                    return null;
+                }
                 return new AuthData(rs.getString("auth_token"), rs.getString("username"));
             }
 
@@ -141,7 +144,9 @@ public class MySqlDataAccess implements DataAccess{
             statement.executeUpdate();
 
             try (var keys = statement.getGeneratedKeys()) {
-                if (keys.next()) return keys.getInt(1);
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
             }
             throw new DataAccessException("insertGame: no generated key");
 
@@ -164,7 +169,9 @@ public class MySqlDataAccess implements DataAccess{
             statement.setInt(1, gameID);
 
             try (var rs = statement.executeQuery()) {
-                if (!rs.next()) return null;
+                if (!rs.next()) {
+                    return null;
+                }
 
                 ChessGame state = gson.fromJson(rs.getString("game_json"), ChessGame.class);
 

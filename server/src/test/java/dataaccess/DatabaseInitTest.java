@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DatabaseInitTest {
 
     @Test
-    void initialize_createsDatabaseAndTables() throws Exception {
+    void initialize() throws Exception {
         try (var conn = DatabaseManager.getConnection();
              var stmt = conn.createStatement()) {
             stmt.executeUpdate("DROP DATABASE IF EXISTS chess");
@@ -26,9 +26,15 @@ public class DatabaseInitTest {
 
             while (rs.next()) {
                 String name = rs.getString(1);
-                if (name.equalsIgnoreCase("user")) hasUser = true;
-                if (name.equalsIgnoreCase("auth")) hasAuth = true;
-                if (name.equalsIgnoreCase("game")) hasGame = true;
+                if (name.equalsIgnoreCase("user")) {
+                    hasUser = true;
+                }
+                if (name.equalsIgnoreCase("auth")) {
+                    hasAuth = true;
+                }
+                if (name.equalsIgnoreCase("game")) {
+                    hasGame = true;
+                }
             }
 
             assertTrue(hasUser, "Missing user table");
