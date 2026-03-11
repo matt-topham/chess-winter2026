@@ -116,6 +116,17 @@ public class MySqlDataAccessTest {
     }
 
     @Test
+    void insertGameNegative() {
+        assertThrows(DataAccessException.class, () ->
+                dao.insertGame(
+                        new GameData(0,
+                                null,
+                                null,
+                                null,
+                                new ChessGame())));
+    }
+
+    @Test
     void getGameNegative() throws Exception {
         assertNull(dao.getGame(9999999));
     }
