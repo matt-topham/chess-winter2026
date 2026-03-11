@@ -3,7 +3,7 @@ package service;
 import dataaccess.*;
 import model.AuthData;
 import model.UserData;
-import org.eclipse.jetty.server.Authentication;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.UUID;
 
@@ -32,7 +32,8 @@ public class UserService {
             throw new AlreadyTakenException("403 Error: Already taken");
         }
 
-        UserData user = new UserData(request.username(), request.password(), request.email());
+        String hashedPassword = BCrypt.hashpw(request.password(), BCrypt.gensalt());
+        UserData user = new UserData(request.username(), hashedPassword, request.email());
         data.insertUser(user);
 
         String token = UUID.randomUUID().toString();
@@ -55,7 +56,7 @@ public class UserService {
         UserData user = data.getUser(request.username());
         if (user == null
                 || user.password() == null
-                || !user.password().equals(request.password())) {
+                || !BCrypt.checkpw(request.password(), user.password())) {
             throw new UnauthorizedException("401 Error: Unauthorized");
         }
 
