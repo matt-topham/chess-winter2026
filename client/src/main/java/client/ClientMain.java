@@ -13,6 +13,8 @@ public class ClientMain {
 
     private State state = State.PRELOGIN;
 
+    private String authToken = null;
+
     public ClientMain(String host, int port) {
         this.facade =  new ServerFacade(host, port);
     }
@@ -78,7 +80,15 @@ public class ClientMain {
     }
 
     private void doRegister(String[] parts) throws Exception {
-
+        if (parts.length != 4) {
+            System.out.println("Usage: register <username> <password> <email>");
+            return;
+        }
+        var auth = facade.register(parts[1], parts[2], parts[3]);
+        this.authToken = auth.authToken();
+        this.state = State.POSTLOGIN;
+        System.out.println("Registered and logged in as " + auth.username() + ".");
+        postLoginHelp();
     }
 
     private void doLogin(String[] parts) throws Exception {
@@ -86,6 +96,10 @@ public class ClientMain {
     }
 
     private void handlePostLogin(String line) throws Exception {
+
+    }
+
+    private void postLoginHelp() {
 
     }
 
