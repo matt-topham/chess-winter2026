@@ -82,4 +82,17 @@ public class ServerFacadeTests {
                 facade.logout("not-a-real-token"));
     }
 
+    @Test
+    void createGamePositive() throws Exception {
+        AuthData auth = facade.register("u1", "pw", "u1@mail.com");
+        int gameId = facade.createGame(auth.authToken(), "My Game");
+        assertTrue(gameId > 0);
+    }
+
+    @Test
+    void createGameNegative() {
+        assertThrows(ServerFacade.ClientException.class, () ->
+                facade.createGame("bad-token", "My Game"));
+    }
+
 }

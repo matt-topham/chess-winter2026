@@ -37,6 +37,13 @@ public class ServerFacade {
         request("DELETE", "/session", authToken, null, Object.class);
     }
 
+    public int createGame(String authToken, String gameName) throws ClientException {
+        var body = new CreateGameRequest(gameName);
+        var result = request("POST", "/game", authToken, body, CreateGameResponse.class);
+        return result.gameID;
+    }
+
+
     private <T> T request(String method, String path, String authToken, Object body, Class<T> responseClass)
             throws ClientException {
         try {
