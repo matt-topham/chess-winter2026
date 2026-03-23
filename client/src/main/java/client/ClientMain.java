@@ -1,9 +1,11 @@
 package client;
 
 import chess.*;
+import model.GameData;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
-import java.util.concurrent.ExecutionException;
 
 public class ClientMain {
 
@@ -15,6 +17,8 @@ public class ClientMain {
     private State state = State.PRELOGIN;
 
     private String authToken = null;
+
+    private List<GameData> lastListedGames = new ArrayList<>();
 
     public ClientMain(String host, int port) {
         this.facade =  new ServerFacade(host, port);
@@ -131,7 +135,14 @@ public class ClientMain {
                 """);
     }
 
-    private void doLogout() throws Exception {}
+    private void doLogout() throws Exception {
+        facade.logout(authToken);
+        authToken = null;
+        lastListedGames = new ArrayList<>();
+        state = State.PRELOGIN;
+        System.out.println("Logged out.");
+        preLoginHelp();
+    }
 
     private void doCreate(String fullLine) throws Exception {}
 
