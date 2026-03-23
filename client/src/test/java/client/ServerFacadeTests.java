@@ -1,18 +1,24 @@
 package client;
 
+import model.AuthData;
+import model.GameData;
 import org.junit.jupiter.api.*;
 import server.Server;
 
+import static org.junit.jupiter.api.Assertions.*;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ServerFacadeTests {
 
     private static Server server;
+    private static ServerFacade facade;
 
     @BeforeAll
     public static void init() {
         server = new Server();
-        var port = server.run(0);
+        int port = server.run(0);
         System.out.println("Started test HTTP server on " + port);
+        facade = new ServerFacade("localhost", port);
     }
 
     @AfterAll
@@ -20,10 +26,14 @@ public class ServerFacadeTests {
         server.stop();
     }
 
-
-    @Test
-    public void sampleTest() {
-        Assertions.assertTrue(true);
+    @BeforeEach
+    void clearDb() throws Exception {
+        facade.clear();
     }
 
+    @Test
+    void clearPositive() throws Exception {
+        facade.clear();
+        assertTrue(true);
+    }
 }
