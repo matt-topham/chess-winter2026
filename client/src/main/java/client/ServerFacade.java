@@ -48,6 +48,11 @@ public class ServerFacade {
         return (result.games == null) ? new GameData[0] : result.games;
     }
 
+    public void joinGame(String authToken, int gameID, String playerColor) throws ClientException {
+        var body = new JoinGameRequest(playerColor, gameID);
+        request("PUT", "/game", authToken, body, Object.class);
+    }
+
     private <T> T request(String method, String path, String authToken, Object body, Class<T> responseClass)
             throws ClientException {
         try {
