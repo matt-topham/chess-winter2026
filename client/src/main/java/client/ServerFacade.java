@@ -28,6 +28,11 @@ public class ServerFacade {
         return request("POST", "/user", null, body, AuthData.class);
     }
 
+    public AuthData login(String username, String password) throws ClientException {
+        var body = new LoginRequest(username, password);
+        return request("POST", "/session", null, body, AuthData.class);
+    }
+
     private <T> T request(String method, String path, String authToken, Object body, Class<T> responseClass)
             throws ClientException {
         try {
