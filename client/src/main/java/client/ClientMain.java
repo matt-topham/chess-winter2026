@@ -3,6 +3,7 @@ package client;
 import chess.*;
 
 import java.util.Scanner;
+import java.util.concurrent.ExecutionException;
 
 public class ClientMain {
 
@@ -104,12 +105,31 @@ public class ClientMain {
     }
 
     private void handlePostLogin(String line) throws Exception {
+        String[] parts = splitCommand(line);
+        String command = parts[0].toLowerCase();
 
+        switch(command) {
+            case "help" -> postLoginHelp();
+            case "logout" -> doLogout();
+            case "create" -> doCreate(line);
+            case "list" -> doList();
+            case "play" -> doPlay(parts);
+            case "observe" -> doObserve(parts);
+            default -> System.out.println("Unknown command. Type 'help'.");
+        }
     }
 
-    private void postLoginHelp() {
+    private void postLoginHelp() {}
 
-    }
+    private void doLogout() throws Exception {}
+
+    private void doCreate(String fullLine) throws Exception {}
+
+    private void doList() throws Exception {}
+
+    private void doPlay(String[] parts) throws Exception {}
+
+    private void doObserve(String[] parts) throws Exception {}
 
     private String prompt() {
         return (state == State.PRELOGIN) ? "[prelogin] >>> " : "[postlogin] >>> ";
