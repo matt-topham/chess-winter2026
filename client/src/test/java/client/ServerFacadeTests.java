@@ -36,4 +36,21 @@ public class ServerFacadeTests {
         facade.clear();
         assertTrue(true);
     }
+
+    @Test
+    void registerPositive() throws Exception {
+        AuthData auth = facade.register("u1", "pw", "u1@mail.com");
+        assertNotNull(auth);
+        assertEquals("u1", auth.username());
+        assertNotNull(auth.authToken());
+        assertTrue(auth.authToken().length() > 10);
+    }
+
+    @Test
+    void registerNegative() throws Exception {
+        facade.register("u1", "pw", "u1@mail.com");
+        assertThrows(ServerFacade.ClientException.class, () ->
+                facade.register("u1", "pw2", "u2@mail.com"));
+    }
+
 }

@@ -1,6 +1,8 @@
 package client;
 
 import com.google.gson.Gson;
+import model.AuthData;
+import model.GameData;
 
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -21,6 +23,10 @@ public class ServerFacade {
         request("DELETE", "/db", null, null, Object.class);
     }
 
+    public AuthData register(String username, String password, String email) throws ClientException {
+        var body = new RegisterRequest(username, password, email);
+        return request("POST", "/user", null, body, AuthData.class);
+    }
 
     private <T> T request(String method, String path, String authToken, Object body, Class<T> responseClass)
             throws ClientException {
@@ -73,6 +79,19 @@ public class ServerFacade {
         } catch (Exception e) {
             throw new ClientException("Error: " + e.getMessage(), 0);
         }
+    }
+
+    private record RegisterRequest(String username, String password, String email) {}
+    private record LoginRequest(String username, String password) {}
+    private record CreateGameRequest(String gameName) {}
+    private record JoinGameRequest(String playerColor, int gameID) {}
+
+    private static class ListGamesResponse {
+        GameData[] games;
+    }
+
+    private static class CreateGameResponse {
+        int gameID;
     }
 
     private static class ErrorResponse {
