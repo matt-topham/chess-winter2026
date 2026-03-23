@@ -92,7 +92,15 @@ public class ClientMain {
     }
 
     private void doLogin(String[] parts) throws Exception {
-
+        if (parts.length != 3) {
+            System.out.println("Usage: login <username> <password>");
+            return;
+        }
+        var auth = facade.login(parts[1], parts[2]);
+        this.authToken = auth.authToken();
+        this.state = State.POSTLOGIN;
+        System.out.println("Logged in as " + auth.username() + ".");
+        postLoginHelp();
     }
 
     private void handlePostLogin(String line) throws Exception {
