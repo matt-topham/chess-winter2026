@@ -144,7 +144,15 @@ public class ClientMain {
         preLoginHelp();
     }
 
-    private void doCreate(String fullLine) throws Exception {}
+    private void doCreate(String fullLine) throws Exception {
+        String name = fullLine.substring("create".length()).trim();
+        if (name.isEmpty()) {
+            System.out.println("Usage: create <game name>");
+            return;
+        }
+        int gameId = facade.createGame(authToken, name);
+        System.out.println("Created game: " + name);
+    }
 
     private void doList() throws Exception {}
 
