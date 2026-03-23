@@ -119,7 +119,17 @@ public class ClientMain {
         }
     }
 
-    private void postLoginHelp() {}
+    private void postLoginHelp() {
+        System.out.println("""
+                Postlogin commands:
+                    help
+                    list
+                    create <game name>
+                    play <game #> <white|black>
+                    observe <game #>
+                    logout
+                """);
+    }
 
     private void doLogout() throws Exception {}
 
