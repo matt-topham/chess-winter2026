@@ -68,7 +68,13 @@ public class ClientMain {
     }
 
     private void preLoginHelp() {
-
+        System.out.println("""
+                Prelogin commands:
+                   help
+                   register <username> <password> <email>
+                   login <username> <password>
+                   quit
+                """);
     }
 
     private void doRegister(String[] parts) throws Exception {
