@@ -29,7 +29,7 @@ public class ClientMain {
 
     private void run() {
         System.out.println("♕ 240 Chess Client");
-        preloginHelp();
+        preLoginHelp();
 
         while (true) {
             System.out.print(prompt());
@@ -38,10 +38,10 @@ public class ClientMain {
 
             try {
                 if (state == State.PRELOGIN) {
-                    if (handlePrelogin(line)) return;
+                    if (handlePreLogin(line)) return;
                 }
                 else {
-                    handlePostlogin(line);
+                    handlePostLogin(line);
                 }
             }
             catch (ServerFacade.ClientException e) {
@@ -53,16 +53,33 @@ public class ClientMain {
         }
     }
 
-    private boolean handlePrelogin(String line) throws Exception {
-        // come back and fill in
+    private boolean handlePreLogin(String line) throws Exception {
+        String[] parts = splitCommand(line);
+        String command = parts[0].toLowerCase();
+
+        switch (command) {
+            case "help" -> preLoginHelp();
+            case "quit", "exit" -> {return true;}
+            case "register" -> doRegister(parts);
+            case "login" -> doLogin(parts);
+            default -> System.out.println("Unknown command. Type 'help.");
+        }
         return false;
     }
 
-    private void preloginHelp() {
+    private void preLoginHelp() {
 
     }
 
-    private void handlePostlogin(String line) throws Exception {
+    private void doRegister(String[] parts) throws Exception {
+
+    }
+
+    private void doLogin(String[] parts) throws Exception {
+
+    }
+
+    private void handlePostLogin(String line) throws Exception {
 
     }
 
@@ -73,5 +90,9 @@ public class ClientMain {
     private static String cleanMessage(String msg) {
         // come back and finish this
         return "Error: " + msg;
+    }
+
+    private static String[] splitCommand(String line) {
+        return line.trim().split("\\s+");
     }
 }
