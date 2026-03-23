@@ -69,4 +69,17 @@ public class ServerFacadeTests {
                 facade.login("u1", "wrong"));
     }
 
+    @Test
+    void logoutPositive() throws Exception {
+        AuthData auth = facade.register("u1", "pw", "u1@mail.com");
+        facade.logout(auth.authToken());
+        assertTrue(true);
+    }
+
+    @Test
+    void logoutNegative() {
+        assertThrows(ServerFacade.ClientException.class, () ->
+                facade.logout("not-a-real-token"));
+    }
+
 }

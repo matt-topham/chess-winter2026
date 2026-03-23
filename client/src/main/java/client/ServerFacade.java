@@ -33,6 +33,10 @@ public class ServerFacade {
         return request("POST", "/session", null, body, AuthData.class);
     }
 
+    public void logout(String authToken) throws ClientException {
+        request("DELETE", "/session", authToken, null, Object.class);
+    }
+
     private <T> T request(String method, String path, String authToken, Object body, Class<T> responseClass)
             throws ClientException {
         try {
