@@ -95,4 +95,20 @@ public class ServerFacadeTests {
                 facade.createGame("bad-token", "My Game"));
     }
 
+    @Test
+    void listGamesPositive() throws Exception {
+        AuthData auth = facade.register("u1", "pw", "u1@mail.com");
+        facade.createGame(auth.authToken(), "A");
+        facade.createGame(auth.authToken(), "B");
+
+        GameData[] games = facade.listGames(auth.authToken());
+        assertNotNull(games);
+        assertEquals(2, games.length);
+    }
+
+    @Test
+    void listGamesNegative() {
+        assertThrows(ServerFacade.ClientException.class, () ->
+                facade.listGames("bad-token"));
+    }
 }

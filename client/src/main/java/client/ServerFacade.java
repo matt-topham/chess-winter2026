@@ -43,6 +43,10 @@ public class ServerFacade {
         return result.gameID;
     }
 
+    public GameData[] listGames(String authToken) throws ClientException {
+        var result = request("GET", "/game", authToken, null, ListGamesResponse.class);
+        return (result.games == null) ? new GameData[0] : result.games;
+    }
 
     private <T> T request(String method, String path, String authToken, Object body, Class<T> responseClass)
             throws ClientException {
