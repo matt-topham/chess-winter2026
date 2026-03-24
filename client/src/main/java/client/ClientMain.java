@@ -202,10 +202,36 @@ public class ClientMain {
         BoardPrinter.printInitialBoard(perspective);
     }
 
-    private void doObserve(String[] parts) throws Exception {}
+    private void doObserve(String[] parts) throws Exception {
+        if (parts.length != 2) {
+            System.out.println("Usage: observe <game #>");
+            return;
+        }
+        Integer index = parseGameNumber(parts[1]);
+        if (index == null) return;
+
+        GameData game = lastListedGames.get(index);
+
+        BoardPrinter.printInitialBoard(ChessGame.TeamColor.WHITE);
+    }
 
     private Integer parseGameNumber(String s) {
-        return null;
+        if (lastListedGames.isEmpty()) {
+            System.out.println("No games listed yet. Run list first.");
+            return null;
+        }
+        try {
+            int n = Integer.parseInt(s);
+            if (n < 1 || n > lastListedGames.size()) {
+                System.out.println("Game # must be between 1 and " + lastListedGames.size() + ".");
+                return null;
+            }
+            return n-1;
+        }
+        catch (NumberFormatException e) {
+            System.out.println("Game # must be a number.");
+            return null;
+        }
     }
 
     private String prompt() {
@@ -213,8 +239,13 @@ public class ClientMain {
     }
 
     private static String cleanMessage(String msg) {
-        // come back and finish this
-        return "Error: " + msg;
+        if (msg == null || msg.isBlank()) {
+            return "An error occured.";
+        }
+        if(msg.toLowerCase().contains("error")) {
+            return msg;
+        }
+        return "Error" + msg;
     }
 
     private static String[] splitCommand(String line) {
