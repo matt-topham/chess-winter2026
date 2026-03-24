@@ -172,9 +172,41 @@ public class ClientMain {
         }
     }
 
-    private void doPlay(String[] parts) throws Exception {}
+    private void doPlay(String[] parts) throws Exception {
+        if (parts.length != 3) {
+            System.out.println("Usage: play <game #> <white|black>");
+            return;
+        }
+        Integer index = parseGameNumber(parts[1]);
+        if (index == null) {
+            return;
+        }
+        String colorInput = parts[2].toLowerCase();
+        String color;
+        ChessGame.TeamColor perspective;
+        if (colorInput.equals("white")) {
+            color = "WHITE";
+            perspective = ChessGame.TeamColor.WHITE;
+        }
+        else if (colorInput.equals("black")) {
+            color = "BLACK";
+            perspective = ChessGame.TeamColor.BLACK;
+        }
+        else {
+            System.out.println("Color must be white or black.");
+            return;
+        }
+        GameData game = lastListedGames.get(index);
+        facade.joinGame(authToken, game.gameID(), color);
+
+        BoardPrinter.printInitialBoard(perspective);
+    }
 
     private void doObserve(String[] parts) throws Exception {}
+
+    private Integer parseGameNumber(String s) {
+        return null;
+    }
 
     private String prompt() {
         return (state == State.PRELOGIN) ? "[prelogin] >>> " : "[postlogin] >>> ";
