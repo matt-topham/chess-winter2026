@@ -193,7 +193,7 @@ public class ClientMain {
             perspective = ChessGame.TeamColor.BLACK;
         }
         else {
-            System.out.println("Color must be white or black.");
+            System.out.println("Color must be 'white' or 'black'.");
             return;
         }
         GameData game = lastListedGames.get(index);
@@ -217,7 +217,7 @@ public class ClientMain {
 
     private Integer parseGameNumber(String s) {
         if (lastListedGames.isEmpty()) {
-            System.out.println("No games listed yet. Run list first.");
+            System.out.println("No games listed yet. Run 'list' first.");
             return null;
         }
         try {
