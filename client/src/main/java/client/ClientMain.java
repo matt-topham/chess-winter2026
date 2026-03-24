@@ -69,7 +69,7 @@ public class ClientMain {
             case "quit", "exit" -> {return true;}
             case "register" -> doRegister(parts);
             case "login" -> doLogin(parts);
-            default -> System.out.println("Unknown command. Type 'help.");
+            default -> System.out.println("Unknown command. Type 'help'.");
         }
         return false;
     }
@@ -199,6 +199,7 @@ public class ClientMain {
         GameData game = lastListedGames.get(index);
         facade.joinGame(authToken, game.gameID(), color);
 
+        System.out.print(ui.EscapeSequences.ERASE_SCREEN);
         BoardPrinter.printInitialBoard(perspective);
     }
 
@@ -210,8 +211,7 @@ public class ClientMain {
         Integer index = parseGameNumber(parts[1]);
         if (index == null) return;
 
-        GameData game = lastListedGames.get(index);
-
+        System.out.print(ui.EscapeSequences.ERASE_SCREEN);
         BoardPrinter.printInitialBoard(ChessGame.TeamColor.WHITE);
     }
 
@@ -240,12 +240,12 @@ public class ClientMain {
 
     private static String cleanMessage(String msg) {
         if (msg == null || msg.isBlank()) {
-            return "An error occured.";
+            return "An error occurred.";
         }
         if(msg.toLowerCase().contains("error")) {
             return msg;
         }
-        return "Error" + msg;
+        return "Error: " + msg;
     }
 
     private static String[] splitCommand(String line) {
