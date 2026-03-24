@@ -135,9 +135,15 @@ public class ServerFacade {
     }
 
     private static String pickErrorMessage(ErrorResponse err, String fallback) {
-        if (err == null) return fallback;
-        if (err.message == null) return fallback;
-        if (err.message.isBlank()) return fallback;
+        if (err == null) {
+            return fallback;
+        }
+        if (err.message == null) {
+            return fallback;
+        }
+        if (err.message.isBlank()) {
+            return fallback;
+        }
         return err.message;
     }
 }
