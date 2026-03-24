@@ -154,7 +154,23 @@ public class ClientMain {
         System.out.println("Created game: " + name);
     }
 
-    private void doList() throws Exception {}
+    private void doList() throws Exception {
+        GameData[] games = facade.listGames(authToken);
+        lastListedGames = new ArrayList<>(List.of(games));
+
+        if (lastListedGames.isEmpty()) {
+            System.out.println("No games found.");
+            return;
+        }
+
+        System.out.println("Games:");
+        for (int i = 0; i < lastListedGames.size(); i++) {
+            GameData game = lastListedGames.get(i);
+            String white = (game.whiteUsername() == null) ? "-" : game.whiteUsername();
+            String black = (game.blackUsername() == null) ? "-" : game.blackUsername();;
+            System.out.printf(" %d) %s  [white: %s, black: %s]%n", i+1, game.gameName(), white, black);
+        }
+    }
 
     private void doPlay(String[] parts) throws Exception {}
 
