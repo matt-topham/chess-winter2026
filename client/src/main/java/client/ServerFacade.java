@@ -91,9 +91,7 @@ public class ServerFacade {
                 if (errStream != null) {
                     try (var reader = new InputStreamReader(errStream, StandardCharsets.UTF_8)) {
                         ErrorResponse err = gson.fromJson(reader, ErrorResponse.class);
-                        if (err != null && err.message != null && !err.message.isBlank()) {
-                            message = err.message;
-                        }
+                        message = pickErrorMessage(err, message);
                     }
                 }
                 throw new ClientException(message, status);
@@ -134,5 +132,12 @@ public class ServerFacade {
         public int status() {
             return status;
         }
+    }
+
+    private static String pickErrorMessage(ErrorResponse err, String fallback) {
+        if (err == null) return fallback;
+        if (err.message == null) return fallback;
+        if (err.message.isBlank()) return fallback;
+        return err.message;
     }
 }

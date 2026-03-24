@@ -217,7 +217,9 @@ public class ClientMain {
             return;
         }
         Integer index = parseGameNumber(parts[1]);
-        if (index == null) return;
+        if (index == null) {
+            return;
+        }
 
         System.out.print(ui.EscapeSequences.ERASE_SCREEN);
         BoardPrinter.printInitialBoard(ChessGame.TeamColor.WHITE);
