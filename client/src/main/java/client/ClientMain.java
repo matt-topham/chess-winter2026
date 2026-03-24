@@ -28,8 +28,12 @@ public class ClientMain {
         String host = "localhost";
         int port = 8080;
 
-        if (args.length >= 1) host = args[0];
-        if (args.length >= 2) port = Integer.parseInt(args[1]);
+        if (args.length >= 1) {
+            host = args[0];
+        }
+        if (args.length >= 2) {
+            port = Integer.parseInt(args[1]);
+        }
 
         new ClientMain(host, port).run();
     }
@@ -41,11 +45,15 @@ public class ClientMain {
         while (true) {
             System.out.print(prompt());
             String line = in.nextLine().trim();
-            if (line.isEmpty()) continue;
+            if (line.isEmpty()) {
+                continue;
+            }
 
             try {
                 if (state == State.PRELOGIN) {
-                    if (handlePreLogin(line)) return;
+                    if (handlePreLogin(line)) {
+                        return;
+                    }
                 }
                 else {
                     handlePostLogin(line);
