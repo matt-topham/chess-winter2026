@@ -1,6 +1,7 @@
 package client;
 
 import com.google.gson.Gson;
+import websocket.commands.ConnectCommand;
 import websocket.messages.ServerMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
@@ -50,6 +51,22 @@ public class WebSocketFacade {
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to connect websocket: " + e.getMessage(), e);
+        }
+    }
+
+    public void connectGame(String authToken, int gameId, String playerColor) {
+        send(new ConnectCommand(authToken, gameId, playerColor)); // WHITE/BLACK/OBSERVER
+    }
+
+    private void send(Object command) {
+        try {
+            if (session == null) {
+                onError.accept("Error: websocket not connected");
+                return;
+            }
+            session.getBasicRemote().sendText(gson.toJson(command));
+        } catch (Exception e) {
+            onError.accept("Error: failed to send message");
         }
     }
 
