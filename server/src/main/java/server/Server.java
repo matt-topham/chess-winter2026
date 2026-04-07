@@ -4,16 +4,24 @@ import dataaccess.*;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import com.google.gson.Gson;
+import io.javalin.websocket.WsContext;
+import model.AuthData;
+import model.GameData;
 import service.*;
+import websocket.commands.UserGameCommand;
+import websocket.commands.ConnectCommand;
+import websocket.messages.LoadGameMessage;
+import websocket.messages.ErrorMessage;
 
 import java.util.Map;
-
-import javax.xml.crypto.Data;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
 
     private final Javalin javalin;
     private final Gson gson = new Gson();
+    private final ConcurrentHashMap<Integer, Set<WsContext>> sessionsByGame = new ConcurrentHashMap<>();
 
     public Server() {
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
@@ -28,6 +36,36 @@ public class Server {
         ClearService clearService = new ClearService(data);
         UserService userService = new UserService(data);
         GameService gameService = new GameService(data);
+
+        // Websocket
+        javalin.ws("/ws", ws -> {
+
+            ws.onMessage(ctx -> {
+                String json = ctx.message();
+
+                try {
+                    UserGameCommand base = gson.fromJson(json, UserGameCommand.class);
+
+                    if (base == null || base.getCommandType() == null) {
+                        ctx.send(gson.toJson(new ErrorMessage("Error: invalid command")));
+                        return;
+                    }
+
+                    switch (base.getCommandType()) {
+                        case CONNECT -> handleConnect(ctx, json, data);
+                        default -> ctx.send(gson.toJson(new ErrorMessage("Error: unsupported command")));
+                    }
+
+                } catch (Exception e) {
+                    ctx.send(gson.toJson(new ErrorMessage("Error: " + safeMsg(e))));
+                }
+            });
+
+            ws.onClose(ctx -> {
+                sessionsByGame.values().forEach(set -> set.remove(ctx));
+            });
+        });
+
         // Clear
         javalin.delete("/db", ctx -> {
             clearService.clear();
@@ -115,5 +153,32 @@ public class Server {
 
     public void stop() {
         javalin.stop();
+    }
+
+    private void handleConnect(WsContext ctx, String json, DataAccess data) throws DataAccessException {
+
+        ConnectCommand cmd = gson.fromJson(json, ConnectCommand.class);
+
+        if (cmd == null || cmd.getAuthToken() == null || cmd.getAuthToken().isBlank()) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: unauthorized")));
+            return;
+        }
+
+        AuthData auth = data.getAuth(cmd.getAuthToken());
+        if (auth == null) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: unauthorized")));
+            return;
+        }
+
+        int gameId = cmd.getGameID();
+        GameData game = data.getGame(gameId);
+        if (game == null) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: bad request")));
+            return;
+        }
+
+        sessionsByGame.computeIfAbsent(gameId, k -> ConcurrentHashMap.newKeySet()).add(ctx);
+
+        ctx.send(gson.toJson(new LoadGameMessage(game.game())));
     }
 }
