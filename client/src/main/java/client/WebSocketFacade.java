@@ -58,6 +58,12 @@ public class WebSocketFacade {
         send(new ConnectCommand(authToken, gameId, playerColor)); // WHITE/BLACK/OBSERVER
     }
 
+    public void close() {
+        try {
+            if (session != null) session.close();
+        } catch (Exception ignored) {}
+    }
+
     private void send(Object command) {
         try {
             if (session == null) {
