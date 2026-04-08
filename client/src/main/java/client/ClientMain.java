@@ -1,6 +1,6 @@
 package client;
 
-import chess.*;
+import chess.ChessGame;
 import model.GameData;
 
 import java.util.ArrayList;
@@ -9,31 +9,32 @@ import java.util.Scanner;
 
 public class ClientMain {
 
+    private final String host;
+    private final int port;
+
     private final ServerFacade facade;
+    private WebSocketFacade ws = null;
+
     private final Scanner in = new Scanner(System.in);
 
-    private enum State {PRELOGIN, POSTLOGIN}
-
+    private enum State { PRELOGIN, POSTLOGIN }
     private State state = State.PRELOGIN;
 
     private String authToken = null;
-
     private List<GameData> lastListedGames = new ArrayList<>();
 
     public ClientMain(String host, int port) {
-        this.facade =  new ServerFacade(host, port);
+        this.host = host;
+        this.port = port;
+        this.facade = new ServerFacade(host, port);
     }
 
     public static void main(String[] args) {
         String host = "localhost";
         int port = 8080;
 
-        if (args.length >= 1) {
-            host = args[0];
-        }
-        if (args.length >= 2) {
-            port = Integer.parseInt(args[1]);
-        }
+        if (args.length >= 1) host = args[0];
+        if (args.length >= 2) port = Integer.parseInt(args[1]);
 
         new ClientMain(host, port).run();
     }
@@ -45,24 +46,17 @@ public class ClientMain {
         while (true) {
             System.out.print(prompt());
             String line = in.nextLine().trim();
-            if (line.isEmpty()) {
-                continue;
-            }
+            if (line.isEmpty()) continue;
 
             try {
                 if (state == State.PRELOGIN) {
-                    if (handlePreLogin(line)) {
-                        return;
-                    }
-                }
-                else {
+                    if (handlePreLogin(line)) return;
+                } else {
                     handlePostLogin(line);
                 }
-            }
-            catch (ServerFacade.ClientException e) {
+            } catch (ServerFacade.ClientException e) {
                 System.out.println(cleanMessage(e.getMessage()));
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 System.out.println("An error occurred. Please try again.");
             }
         }
@@ -74,7 +68,7 @@ public class ClientMain {
 
         switch (command) {
             case "help" -> preLoginHelp();
-            case "quit", "exit" -> {return true;}
+            case "quit", "exit" -> { return true; }
             case "register" -> doRegister(parts);
             case "login" -> doLogin(parts);
             default -> System.out.println("Unknown command. Type 'help'.");
@@ -120,10 +114,10 @@ public class ClientMain {
         String[] parts = splitCommand(line);
         String command = parts[0].toLowerCase();
 
-        switch(command) {
+        switch (command) {
             case "help" -> postLoginHelp();
             case "logout" -> doLogout();
-            case "create" -> doCreate(line);
+            case "create" -> doCreate(line); // allows spaces in name
             case "list" -> doList();
             case "play" -> doPlay(parts);
             case "observe" -> doObserve(parts);
@@ -144,10 +138,16 @@ public class ClientMain {
     }
 
     private void doLogout() throws Exception {
+        if (ws != null) {
+            ws.close();
+            ws = null;
+        }
+
         facade.logout(authToken);
         authToken = null;
         lastListedGames = new ArrayList<>();
         state = State.PRELOGIN;
+
         System.out.println("Logged out.");
         preLoginHelp();
     }
@@ -158,7 +158,7 @@ public class ClientMain {
             System.out.println("Usage: create <game name>");
             return;
         }
-        int gameId = facade.createGame(authToken, name);
+        facade.createGame(authToken, name);
         System.out.println("Created game: " + name);
     }
 
@@ -175,8 +175,8 @@ public class ClientMain {
         for (int i = 0; i < lastListedGames.size(); i++) {
             GameData game = lastListedGames.get(i);
             String white = (game.whiteUsername() == null) ? "-" : game.whiteUsername();
-            String black = (game.blackUsername() == null) ? "-" : game.blackUsername();;
-            System.out.printf(" %d) %s  [white: %s, black: %s]%n", i+1, game.gameName(), white, black);
+            String black = (game.blackUsername() == null) ? "-" : game.blackUsername();
+            System.out.printf(" %d) %s  [white: %s, black: %s]%n", i + 1, game.gameName(), white, black);
         }
     }
 
@@ -185,30 +185,45 @@ public class ClientMain {
             System.out.println("Usage: play <game #> <white|black>");
             return;
         }
+
         Integer index = parseGameNumber(parts[1]);
-        if (index == null) {
-            return;
-        }
+        if (index == null) return;
+
         String colorInput = parts[2].toLowerCase();
         String color;
         ChessGame.TeamColor perspective;
+
         if (colorInput.equals("white")) {
             color = "WHITE";
             perspective = ChessGame.TeamColor.WHITE;
-        }
-        else if (colorInput.equals("black")) {
+        } else if (colorInput.equals("black")) {
             color = "BLACK";
             perspective = ChessGame.TeamColor.BLACK;
-        }
-        else {
+        } else {
             System.out.println("Color must be 'white' or 'black'.");
             return;
         }
+
         GameData game = lastListedGames.get(index);
+
         facade.joinGame(authToken, game.gameID(), color);
 
-        System.out.print(ui.EscapeSequences.ERASE_SCREEN);
-        BoardPrinter.printInitialBoard(perspective);
+        if (ws != null) {
+            ws.close();
+            ws = null;
+        }
+
+        ws = new WebSocketFacade(
+                host, port,
+                load -> {
+                    System.out.print(ui.EscapeSequences.ERASE_SCREEN);
+                    BoardPrinter.printBoard(load.getGame().getBoard(), perspective);
+                },
+                System.out::println,
+                System.out::println
+        );
+
+        ws.connectGame(authToken, game.gameID(), color);
     }
 
     private void doObserve(String[] parts) throws Exception {
@@ -216,13 +231,28 @@ public class ClientMain {
             System.out.println("Usage: observe <game #>");
             return;
         }
+
         Integer index = parseGameNumber(parts[1]);
-        if (index == null) {
-            return;
+        if (index == null) return;
+
+        GameData game = lastListedGames.get(index);
+
+        if (ws != null) {
+            ws.close();
+            ws = null;
         }
 
-        System.out.print(ui.EscapeSequences.ERASE_SCREEN);
-        BoardPrinter.printInitialBoard(ChessGame.TeamColor.WHITE);
+        ws = new WebSocketFacade(
+                host, port,
+                load -> {
+                    System.out.print(ui.EscapeSequences.ERASE_SCREEN);
+                    BoardPrinter.printBoard(load.getGame().getBoard(), ChessGame.TeamColor.WHITE);
+                },
+                System.out::println,
+                System.out::println
+        );
+
+        ws.connectGame(authToken, game.gameID(), "OBSERVER");
     }
 
     private Integer parseGameNumber(String s) {
@@ -236,9 +266,8 @@ public class ClientMain {
                 System.out.println("Game # must be between 1 and " + lastListedGames.size() + ".");
                 return null;
             }
-            return n-1;
-        }
-        catch (NumberFormatException e) {
+            return n - 1;
+        } catch (NumberFormatException e) {
             System.out.println("Game # must be a number.");
             return null;
         }
@@ -252,7 +281,7 @@ public class ClientMain {
         if (msg == null || msg.isBlank()) {
             return "An error occurred.";
         }
-        if(msg.toLowerCase().contains("error")) {
+        if (msg.toLowerCase().contains("error")) {
             return msg;
         }
         return "Error: " + msg;
