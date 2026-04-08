@@ -23,6 +23,8 @@ public class ClientMain {
     private String authToken = null;
     private List<GameData> lastListedGames = new ArrayList<>();
 
+    private int currentGameId = -1;
+
     public ClientMain(String host, int port) {
         this.host = host;
         this.port = port;
@@ -121,6 +123,7 @@ public class ClientMain {
             case "list" -> doList();
             case "play" -> doPlay(parts);
             case "observe" -> doObserve(parts);
+            case "leave" -> doLeave();
             default -> System.out.println("Unknown command. Type 'help'.");
         }
     }
@@ -133,6 +136,7 @@ public class ClientMain {
                     create <game name>
                     play <game #> <white|black>
                     observe <game #>
+                    leave
                     logout
                 """);
     }
@@ -224,6 +228,8 @@ public class ClientMain {
         );
 
         ws.connectGame(authToken, game.gameID(), color);
+
+        currentGameId = game.gameID();
     }
 
     private void doObserve(String[] parts) throws Exception {
@@ -254,6 +260,8 @@ public class ClientMain {
         );
 
         ws.connectGame(authToken, game.gameID(), "OBSERVER");
+
+        currentGameId = game.gameID();
     }
 
     private Integer parseGameNumber(String s) {
@@ -290,5 +298,25 @@ public class ClientMain {
 
     private static String[] splitCommand(String line) {
         return line.trim().split("\\s+");
+    }
+
+    private void doLeave() {
+        if (ws == null) {
+            System.out.println("You are not currently in a game.");
+            return;
+        }
+
+        try {
+            // If your WebSocketFacade has leaveGame(authToken, gameId),
+            // you must also remember the current gameId in ClientMain when you join.
+            ws.leaveGame(authToken, currentGameId);
+        } catch (Exception ignored) {
+            // Even if send fails, still close locally
+        } finally {
+            ws.close();
+            ws = null;
+            currentGameId = -1;
+            System.out.println("Left game.");
+        }
     }
 }
