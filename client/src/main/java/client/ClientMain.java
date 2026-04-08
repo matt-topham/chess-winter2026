@@ -237,6 +237,7 @@ public class ClientMain {
 
         GameData game = lastListedGames.get(index);
 
+
         if (ws != null) {
             ws.close();
             ws = null;

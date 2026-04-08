@@ -12,6 +12,7 @@ import websocket.commands.UserGameCommand;
 import websocket.commands.ConnectCommand;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.ErrorMessage;
+import websocket.messages.NotificationMessage;
 
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +23,9 @@ public class Server {
     private final Javalin javalin;
     private final Gson gson = new Gson();
     private final ConcurrentHashMap<Integer, Set<WsContext>> sessionsByGame = new ConcurrentHashMap<>();
+
+    private record ConnInfo(String username, int gameId, String role) {}
+    private final Map<WsContext, ConnInfo> connInfoBySession = new ConcurrentHashMap<>();
 
     public Server() {
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
@@ -164,21 +168,40 @@ public class Server {
             return;
         }
 
-        AuthData auth = data.getAuth(cmd.getAuthToken());
-        if (auth == null) {
-            ctx.send(gson.toJson(new ErrorMessage("Error: unauthorized")));
+        int gameId = cmd.getGameID();
+        String role = cmd.getPlayerColor();
+        if (role == null || role.isBlank()) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: bad request")));
             return;
         }
 
-        int gameId = cmd.getGameID();
+        AuthData auth = data.getAuth(cmd.getAuthToken());
+        if (auth == null || auth.username() == null || auth.username().isBlank()) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: unauthorized")));
+            return;
+        }
+        String username = auth.username();
+
         GameData game = data.getGame(gameId);
-        if (game == null) {
+        if (game == null || game.game() == null) {
             ctx.send(gson.toJson(new ErrorMessage("Error: bad request")));
             return;
         }
 
         sessionsByGame.computeIfAbsent(gameId, k -> ConcurrentHashMap.newKeySet()).add(ctx);
+        connInfoBySession.put(ctx, new ConnInfo(username, gameId, role));
 
         ctx.send(gson.toJson(new LoadGameMessage(game.game())));
+
+        broadcastExcept(gameId, ctx, new NotificationMessage(username + " joined as " + role));
+    }
+
+    private void broadcastExcept(int gameId, WsContext except, Object messageObj) {
+        String msg = gson.toJson(messageObj);
+        for (WsContext s : sessionsByGame.getOrDefault(gameId, Set.of())) {
+            if (s != except) {
+                s.send(msg);
+            }
+        }
     }
 }
