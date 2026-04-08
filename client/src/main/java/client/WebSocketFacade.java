@@ -100,4 +100,8 @@ public class WebSocketFacade {
             onError.accept("Error: failed to parse server message");
         }
     }
+
+    public void leaveGame(String authToken, int gameId) {
+        send(new websocket.commands.LeaveCommand(authToken, gameId));
+    }
 }
