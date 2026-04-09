@@ -222,10 +222,14 @@ public class Server {
         broadcastExcept(gameId, ctx, new NotificationMessage(username + " joined as " + role));
     }
 
-    private void broadcastExcept(int gameId, WsContext except, Object messageObj) {
+    private void broadcastExcept(int gameId, WsContext exceptCtx, Object messageObj) {
         String msg = gson.toJson(messageObj);
+
+        String exceptId = exceptCtx.sessionId();
+
         for (WsContext s : sessionsByGame.getOrDefault(gameId, Set.of())) {
-            if (s != except) {
+            String sid = s.sessionId();
+            if (!sid.equals(exceptId)) {
                 s.send(msg);
             }
         }
@@ -356,11 +360,11 @@ public class Server {
                 : ChessGame.TeamColor.WHITE;
 
         if (game.isInCheckmate(opponent)) {
-            broadcast(gameId, new NotificationMessage(opponent + " is in checkmate"));
+            broadcastExcept(gameId, ctx, new NotificationMessage(opponent + " is in checkmate"));
         } else if (game.isInStalemate(opponent)) {
-            broadcast(gameId, new NotificationMessage("Stalemate"));
+            broadcastExcept(gameId, ctx, new NotificationMessage("Stalemate"));
         } else if (game.isInCheck(opponent)) {
-            broadcast(gameId, new NotificationMessage(opponent + " is in check"));
+            broadcastExcept(gameId, ctx, new NotificationMessage(opponent + " is in check"));
         }
     }
 
