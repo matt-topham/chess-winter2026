@@ -383,35 +383,59 @@ public class ClientMain {
         postLoginHelp();
     }
 
-    private void doMove(String[] parts) {
-        if (ws == null || currentGameId == -1) {
-            System.out.println("You are not currently in a game. Use 'play' or 'observe' first.");
-            return;
-        }
-        if (parts.length < 3 || parts.length > 4) {
+    private void doMove(String[] parts) throws Exception {
+        // move <from> <to> [promotion]
+        if (parts.length != 3 && parts.length != 4) {
             System.out.println("Usage: move <from> <to> [q|r|b|n]");
             return;
         }
+        if (lastGame == null) {
+            System.out.println("No game loaded yet.");
+            return;
+        }
 
-        try {
-            ChessPosition from = parseSquare(parts[1]);
-            ChessPosition to = parseSquare(parts[2]);
+        ChessPosition from = parseSquare(parts[1]);
+        ChessPosition to = parseSquare(parts[2]);
+        if (from == null || to == null) {
+            System.out.println("Invalid square. Use a1 through h8.");
+            return;
+        }
 
-            ChessPiece.PieceType promo = null;
+        ChessPiece moving = lastGame.getBoard().getPiece(from);
+        if (moving == null) {
+            System.out.println("No piece at " + parts[1].toLowerCase());
+            return;
+        }
+
+        ChessPiece.PieceType promo = null;
+
+        boolean isPawn = moving.getPieceType() == ChessPiece.PieceType.PAWN;
+        boolean hitsLastRank =
+                (moving.getTeamColor() == ChessGame.TeamColor.WHITE && to.getRow() == 8) ||
+                        (moving.getTeamColor() == ChessGame.TeamColor.BLACK && to.getRow() == 1);
+
+        if (isPawn && hitsLastRank) {
             if (parts.length == 4) {
                 promo = parsePromotion(parts[3]);
                 if (promo == null) {
-                    System.out.println("Promotion must be one of: q r b n");
+                    System.out.println("Promotion must be q/r/b/n (or queen/rook/bishop/knight).");
+                    return;
+                }
+            } else {
+                promo = promptPromotion();
+                if (promo == null) {
+                    System.out.println("Move cancelled.");
                     return;
                 }
             }
-
-            ChessMove move = new ChessMove(from, to, promo);
-            ws.makeMove(authToken, currentGameId, move);
-
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+        } else if (parts.length == 4) {
+            System.out.println("Promotion is only allowed when a pawn reaches the last rank.");
+            return;
         }
+
+        ChessMove move = new ChessMove(from, to, promo);
+
+        ws.makeMove(authToken, currentGameId, move);
     }
 
     private static ChessPosition parseSquare(String s) {
@@ -495,5 +519,19 @@ public class ClientMain {
         }
         System.out.print(EscapeSequences.ERASE_SCREEN);
         BoardPrinter.printBoard(lastGame.getBoard(), currentPerspective, from, targets);
+    }
+
+    private ChessPiece.PieceType promptPromotion() {
+        while (true) {
+            System.out.print("Promote to (q/r/b/n) or 'cancel': ");
+            String s = in.nextLine().trim().toLowerCase();
+
+            if (s.equals("cancel")) return null;
+
+            ChessPiece.PieceType p = parsePromotion(s);
+            if (p != null) return p;
+
+            System.out.println("Invalid choice. Enter q, r, b, n, or cancel.");
+        }
     }
 }
