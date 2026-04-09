@@ -352,12 +352,14 @@ public class Server {
         String moveText = cmd.getMove().getStartPosition() + " to " + cmd.getMove().getEndPosition();
         broadcastExcept(info.gameId(), ctx, new NotificationMessage(info.username() + " moved " + moveText));
 
-        if (checkmate) {
-            broadcast(info.gameId(), new NotificationMessage(opponent + " is in checkmate"));
-        } else if (stalemate) {
-            broadcast(info.gameId(), new NotificationMessage("Stalemate"));
-        } else if (check) {
-            broadcast(info.gameId(), new NotificationMessage(opponent + " is in check"));
+        String opponentName = usernameForTeam(gameData, opponent);
+
+        if (game.isInCheckmate(opponent)) {
+            broadcast(info.gameId, new NotificationMessage(opponentName + " is in checkmate"));
+        } else if (game.isInStalemate(opponent)) {
+            broadcast(info.gameId, new NotificationMessage("Stalemate"));
+        } else if (game.isInCheck(opponent)) {
+            broadcast(info.gameId, new NotificationMessage(opponentName + " is in check"));
         }
     }
 
@@ -487,5 +489,13 @@ public class Server {
 
     public void stop() {
         javalin.stop();
+    }
+
+    private String usernameForTeam(GameData gameData, ChessGame.TeamColor team) {
+        if (team == ChessGame.TeamColor.WHITE) {
+            return gameData.whiteUsername();
+        } else {
+            return gameData.blackUsername();
+        }
     }
 }
