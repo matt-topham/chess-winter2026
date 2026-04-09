@@ -357,8 +357,12 @@ public class Server {
 
     private String normalizeRole(String requestedRole, String username, GameData game) {
         if (requestedRole == null || requestedRole.isBlank()) {
-            if (username.equals(game.whiteUsername())) return "WHITE";
-            if (username.equals(game.blackUsername())) return "BLACK";
+            if (username.equals(game.whiteUsername())) {
+                return "WHITE";
+            }
+            if (username.equals(game.blackUsername())) {
+                return "BLACK";
+            }
             return "OBSERVER";
         }
 
@@ -405,7 +409,9 @@ public class Server {
             changed = true;
         }
 
-        if (!changed) return;
+        if (!changed) {
+            return;
+        }
 
         data.updateGame(new GameData(
                 game.gameID(),
