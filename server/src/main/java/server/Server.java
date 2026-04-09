@@ -57,6 +57,7 @@ public class Server {
 
                     switch (base.getCommandType()) {
                         case CONNECT -> handleConnect(ctx, json, data);
+                        case LEAVE -> handleLeave(ctx, data);
                         default -> ctx.send(gson.toJson(new ErrorMessage("Error: unsupported command")));
                     }
 
@@ -66,6 +67,7 @@ public class Server {
             });
 
             ws.onClose(ctx -> {
+                connInfoBySession.remove(ctx);
                 sessionsByGame.values().forEach(set -> set.remove(ctx));
             });
         });
@@ -203,5 +205,63 @@ public class Server {
                 s.send(msg);
             }
         }
+    }
+
+    private void broadcast(int gameId, Object messageObj) {
+        String msg = gson.toJson(messageObj);
+        for (WsContext s : sessionsByGame.getOrDefault(gameId, Set.of())) {
+            s.send(msg);
+        }
+    }
+
+    private void handleLeave(WsContext ctx, DataAccess data) throws DataAccessException {
+
+        ConnInfo info = connInfoBySession.remove(ctx);
+        if (info == null) {
+            return;
+        }
+
+        int gameId = info.gameId();
+        String username = info.username();
+        String role = info.role();
+
+        Set<WsContext> set = sessionsByGame.get(gameId);
+        if (set != null) {
+            set.remove(ctx);
+            if (set.isEmpty()) {
+                sessionsByGame.remove(gameId);
+            }
+        }
+
+        if ("WHITE".equals(role) || "BLACK".equals(role)) {
+            GameData game = data.getGame(gameId);
+            if (game != null) {
+                String white = game.whiteUsername();
+                String black = game.blackUsername();
+
+                boolean changed = false;
+                if ("WHITE".equals(role) && username.equals(white)) {
+                    white = null;
+                    changed = true;
+                }
+                if ("BLACK".equals(role) && username.equals(black)) {
+                    black = null;
+                    changed = true;
+                }
+
+                if (changed) {
+                    GameData updated = new GameData(
+                            game.gameID(),
+                            white,
+                            black,
+                            game.gameName(),
+                            game.game()
+                    );
+                    data.updateGame(updated);
+                }
+            }
+        }
+
+        broadcast(gameId, new NotificationMessage(username + " left the game"));
     }
 }
