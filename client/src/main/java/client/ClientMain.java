@@ -20,7 +20,7 @@ public class ClientMain {
 
     private final Scanner in = new Scanner(System.in);
 
-    private enum State { PRELOGIN, POSTLOGIN }
+    private enum State { PRELOGIN, POSTLOGIN, INGAME }
     private State state = State.PRELOGIN;
 
     private String authToken = null;
