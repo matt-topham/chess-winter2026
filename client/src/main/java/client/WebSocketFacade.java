@@ -109,4 +109,8 @@ public class WebSocketFacade {
     public void makeMove(String authToken, int gameId, ChessMove move) {
         send(new websocket.commands.MakeMoveCommand(authToken, gameId, move));
     }
+
+    public void resign(String authToken, int gameId) {
+        send(new websocket.commands.ResignCommand(authToken, gameId));
+    }
 }

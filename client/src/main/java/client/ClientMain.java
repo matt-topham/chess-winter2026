@@ -128,6 +128,7 @@ public class ClientMain {
             case "observe" -> doObserve(parts);
             case "move" -> doMove(parts);
             case "leave" -> doLeave();
+            case "resign" -> doResign();
             default -> System.out.println("Unknown command. Type 'help'.");
         }
     }
@@ -385,5 +386,22 @@ public class ClientMain {
             case 'n' -> ChessPiece.PieceType.KNIGHT;
             default -> null;
         };
+    }
+
+    private void doResign() {
+        if (ws == null || currentGameId == -1) {
+            System.out.println("You are not currently in a game.");
+            return;
+        }
+
+        System.out.print("Are you sure you want to resign? (y/n): ");
+        String ans = in.nextLine().trim().toLowerCase();
+        if (!ans.equals("y") && !ans.equals("yes")) {
+            System.out.println("Resign cancelled.");
+            return;
+        }
+
+        ws.resign(authToken, currentGameId);
+        System.out.println("Resignation sent.");
     }
 }

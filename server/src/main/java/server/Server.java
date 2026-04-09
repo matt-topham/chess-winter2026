@@ -68,6 +68,7 @@ public class Server {
                         case CONNECT -> handleConnect(ctx, json, data);
                         case LEAVE -> handleLeave(ctx, data);
                         case MAKE_MOVE -> handleMakeMove(ctx, json, data);
+                        case RESIGN -> handleResign(ctx, data);
                         default -> ctx.send(gson.toJson(new ErrorMessage("Error: unsupported command")));
                     }
 
@@ -302,6 +303,11 @@ public class Server {
 
         ChessGame game = gameData.game();
 
+        if (game.isGameOver()) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: game is over")));
+            return;
+        }
+
         ChessGame.TeamColor expected = "WHITE".equals(info.role())
                 ? ChessGame.TeamColor.WHITE
                 : ChessGame.TeamColor.BLACK;
@@ -343,5 +349,52 @@ public class Server {
         } else if (game.isInCheck(opponent)) {
             broadcast(gameId, new NotificationMessage(opponent + " is in check"));
         }
+    }
+
+    private void handleResign(WsContext ctx, DataAccess data) throws DataAccessException {
+
+        ConnInfo info = connInfoBySession.get(ctx);
+        if (info == null) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: unauthorized")));
+            return;
+        }
+        if ("OBSERVER".equals(info.role())) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: unauthorized")));
+            return;
+        }
+
+        int gameId = info.gameId();
+        GameData gameData = data.getGame(gameId);
+        if (gameData == null || gameData.game() == null) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: bad request")));
+            return;
+        }
+
+        ChessGame game = gameData.game();
+
+        if (game.isGameOver()) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: game is over")));
+            return;
+        }
+
+        ChessGame.TeamColor resigningTeam =
+                "WHITE".equals(info.role()) ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
+        ChessGame.TeamColor winner =
+                (resigningTeam == ChessGame.TeamColor.WHITE) ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
+
+        game.setGameOver(true);
+        game.setWinner(winner);
+
+        GameData updated = new GameData(
+                gameData.gameID(),
+                gameData.whiteUsername(),
+                gameData.blackUsername(),
+                gameData.gameName(),
+                game
+        );
+        data.updateGame(updated);
+
+        broadcast(gameId, new NotificationMessage(info.username() + " resigned. " + winner + " wins."));
+        broadcast(gameId, new LoadGameMessage(game));
     }
 }
