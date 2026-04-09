@@ -341,6 +341,18 @@ public class Server {
             return;
         }
 
+        ChessGame.TeamColor opponent = (expected == ChessGame.TeamColor.WHITE)
+                ? ChessGame.TeamColor.BLACK
+                : ChessGame.TeamColor.WHITE;
+
+        if (game.isInCheckmate(opponent)) {
+            game.setGameOver(true);
+            game.setWinner(expected); // mover wins
+        } else if (game.isInStalemate(opponent)) {
+            game.setGameOver(true);
+            game.setWinner(null); // draw
+        }
+
         GameData updated = new GameData(
                 gameData.gameID(),
                 gameData.whiteUsername(),
@@ -355,16 +367,12 @@ public class Server {
         String moveText = cmd.getMove().getStartPosition() + " to " + cmd.getMove().getEndPosition();
         broadcastExcept(gameId, ctx, new NotificationMessage(info.username() + " moved " + moveText));
 
-        ChessGame.TeamColor opponent = (expected == ChessGame.TeamColor.WHITE)
-                ? ChessGame.TeamColor.BLACK
-                : ChessGame.TeamColor.WHITE;
-
         if (game.isInCheckmate(opponent)) {
-            broadcastExcept(gameId, ctx, new NotificationMessage(opponent + " is in checkmate"));
+            broadcast(gameId, new NotificationMessage(opponent + " is in checkmate"));
         } else if (game.isInStalemate(opponent)) {
-            broadcastExcept(gameId, ctx, new NotificationMessage("Stalemate"));
+            broadcast(gameId, new NotificationMessage("Stalemate"));
         } else if (game.isInCheck(opponent)) {
-            broadcastExcept(gameId, ctx, new NotificationMessage(opponent + " is in check"));
+            broadcast(gameId, new NotificationMessage(opponent + " is in check"));
         }
     }
 
