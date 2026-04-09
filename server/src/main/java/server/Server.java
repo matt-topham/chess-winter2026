@@ -32,7 +32,7 @@ public class Server {
             config.staticFiles.add("web");
 
             config.jetty.modifyWebSocketServletFactory(factory -> {
-                factory.setIdleTimeout(java.time.Duration.ofMinutes(30)); // pick your timeout
+                factory.setIdleTimeout(java.time.Duration.ofMinutes(30));
             });
         });
 

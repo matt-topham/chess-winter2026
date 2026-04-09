@@ -5,10 +5,9 @@ import chess.ChessMove;
 import chess.ChessPiece;
 import chess.ChessPosition;
 import model.GameData;
+import ui.EscapeSequences;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class ClientMain {
 
@@ -28,8 +27,8 @@ public class ClientMain {
 
     private int currentGameId = -1;
 
-    private ChessGame.TeamColor currentPerspective = ChessGame.TeamColor.WHITE; // or whatever
-    private ChessGame lastGame = null; // most recent game snapshot from server
+    private ChessGame.TeamColor currentPerspective = ChessGame.TeamColor.WHITE;
+    private ChessGame lastGame = null;
 
 
     public ClientMain(String host, int port) {
@@ -268,7 +267,7 @@ public class ClientMain {
         ws = new WebSocketFacade(
                 host, port,
                 load -> {
-                    lastGame = load.getGame();              // <-- store latest snapshot
+                    lastGame = load.getGame();
                     System.out.print(ui.EscapeSequences.ERASE_SCREEN);
                     BoardPrinter.printBoard(lastGame.getBoard(), currentPerspective);
                 },
@@ -308,7 +307,7 @@ public class ClientMain {
         ws = new WebSocketFacade(
                 host, port,
                 load -> {
-                    lastGame = load.getGame();              // <-- store latest snapshot
+                    lastGame = load.getGame();
                     System.out.print(ui.EscapeSequences.ERASE_SCREEN);
                     BoardPrinter.printBoard(lastGame.getBoard(), currentPerspective);
                 },
@@ -429,8 +428,8 @@ public class ClientMain {
             throw new IllegalArgumentException("Rank must be 1-8");
         }
 
-        int file = (fileChar - 'a') + 1;   // a->1 ... h->8
-        int rank = (rankChar - '1') + 1;   // '1'->1 ... '8'->8
+        int file = (fileChar - 'a') + 1;
+        int rank = (rankChar - '1') + 1;
 
         return new ChessPosition(rank, file);
     }
@@ -475,6 +474,33 @@ public class ClientMain {
     }
 
     private void doHighlight(String[] parts) {
-        System.out.println("Highlight not implemented yet. Usage: highlight <square>");
+        if (lastGame == null) {
+            System.out.println("No game loaded yet.");
+            return;
+        }
+        if (parts.length != 2) {
+            System.out.println("Usage: highlight <square>  (example: highlight e2)");
+            return;
+        }
+
+        ChessPosition from = parseSquare(parts[1]);
+        if (from == null) {
+            System.out.println("Invalid square. Use a1 through h8.");
+            return;
+        }
+
+        var moves = lastGame.validMoves(from);
+        if (moves == null || moves.isEmpty()) {
+            System.out.print(EscapeSequences.ERASE_SCREEN);
+            BoardPrinter.printBoard(lastGame.getBoard(), currentPerspective, from, Set.of());
+            System.out.println("No legal moves.");
+            return;
+        }
+
+        java.util.HashSet<ChessPosition> targets = new java.util.HashSet<>();
+        for (var m : moves) targets.add(m.getEndPosition());
+
+        System.out.print(EscapeSequences.ERASE_SCREEN);
+        BoardPrinter.printBoard(lastGame.getBoard(), currentPerspective, from, targets);
     }
 }
