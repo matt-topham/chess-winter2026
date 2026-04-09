@@ -58,6 +58,7 @@ public class Server {
                     switch (base.getCommandType()) {
                         case CONNECT -> handleConnect(ctx, json, data);
                         case LEAVE -> handleLeave(ctx, data);
+                        case MAKE_MOVE -> handleMakeMove(ctx, json, data);
                         default -> ctx.send(gson.toJson(new ErrorMessage("Error: unsupported command")));
                     }
 
@@ -264,4 +265,6 @@ public class Server {
 
         broadcast(gameId, new NotificationMessage(username + " left the game"));
     }
+
+    private void handleMakeMove(WsContext ctx, String json, DataAccess data) {}
 }
