@@ -13,9 +13,19 @@ import java.util.Objects;
  */
 public class ChessGame {
 
+
+
     private TeamColor teamTurn = TeamColor.WHITE;
     private ChessBoard board;
-    private boolean gameOver =  false;
+
+    private boolean gameOver = false;
+    private TeamColor winner = null; // null for stalemate, or winner color
+
+    public boolean isGameOver() { return gameOver; }
+    public void setGameOver(boolean gameOver) { this.gameOver = gameOver; }
+
+    public TeamColor getWinner() { return winner; }
+    public void setWinner(TeamColor winner) { this.winner = winner; }
 
     public ChessGame() {
         this.board = new ChessBoard();
