@@ -10,9 +10,7 @@ import io.javalin.websocket.WsContext;
 import model.AuthData;
 import model.GameData;
 import service.*;
-import websocket.commands.MakeMoveCommand;
-import websocket.commands.UserGameCommand;
-import websocket.commands.ConnectCommand;
+import websocket.commands.*;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.ErrorMessage;
 import websocket.messages.NotificationMessage;
@@ -66,9 +64,9 @@ public class Server {
 
                     switch (base.getCommandType()) {
                         case CONNECT -> handleConnect(ctx, json, data);
-                        case LEAVE -> handleLeave(ctx, data);
+                        case LEAVE -> handleLeave(ctx, json, data);
                         case MAKE_MOVE -> handleMakeMove(ctx, json, data);
-                        case RESIGN -> handleResign(ctx, data);
+                        case RESIGN -> handleResign(ctx, json, data);
                         default -> ctx.send(gson.toJson(new ErrorMessage("Error: unsupported command")));
                     }
 
@@ -242,12 +240,25 @@ public class Server {
         }
     }
 
-    private void handleLeave(WsContext ctx, DataAccess data) throws DataAccessException {
+    private void handleLeave(WsContext ctx, String json, DataAccess data) throws DataAccessException {
 
-        ConnInfo info = connInfoBySession.remove(ctx);
+        ConnInfo info = connInfoBySession.get(ctx);
         if (info == null) {
             return;
         }
+
+        LeaveCommand cmd = gson.fromJson(json, LeaveCommand.class);
+        if (cmd == null || cmd.getAuthToken() == null || cmd.getAuthToken().isBlank()) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: unauthorized")));
+            return;
+        }
+        AuthData auth = data.getAuth(cmd.getAuthToken());
+        if (auth == null || auth.username() == null || !auth.username().equals(info.username())) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: unauthorized")));
+            return;
+        }
+
+        connInfoBySession.remove(ctx);
 
         int gameId = info.gameId();
         String username = info.username();
@@ -311,6 +322,17 @@ public class Server {
             return;
         }
 
+        if (cmd.getAuthToken() == null || cmd.getAuthToken().isBlank()) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: unauthorized")));
+            return;
+        }
+
+        AuthData auth = data.getAuth(cmd.getAuthToken());
+        if (auth == null || auth.username() == null || !auth.username().equals(info.username())) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: unauthorized")));
+            return;
+        }
+
         int gameId = info.gameId();
         GameData gameData = data.getGame(gameId);
         if (gameData == null || gameData.game() == null) {
@@ -347,10 +369,10 @@ public class Server {
 
         if (game.isInCheckmate(opponent)) {
             game.setGameOver(true);
-            game.setWinner(expected); // mover wins
+            game.setWinner(expected);
         } else if (game.isInStalemate(opponent)) {
             game.setGameOver(true);
-            game.setWinner(null); // draw
+            game.setWinner(null);
         }
 
         GameData updated = new GameData(
@@ -376,7 +398,7 @@ public class Server {
         }
     }
 
-    private void handleResign(WsContext ctx, DataAccess data) throws DataAccessException {
+    private void handleResign(WsContext ctx, String json, DataAccess data) throws DataAccessException {
 
         ConnInfo info = connInfoBySession.get(ctx);
         if (info == null) {
@@ -384,6 +406,17 @@ public class Server {
             return;
         }
         if ("OBSERVER".equals(info.role())) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: unauthorized")));
+            return;
+        }
+
+        ResignCommand cmd = gson.fromJson(json, ResignCommand.class);
+        if (cmd == null || cmd.getAuthToken() == null || cmd.getAuthToken().isBlank()) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: unauthorized")));
+            return;
+        }
+        AuthData auth = data.getAuth(cmd.getAuthToken());
+        if (auth == null || auth.username() == null || !auth.username().equals(info.username())) {
             ctx.send(gson.toJson(new ErrorMessage("Error: unauthorized")));
             return;
         }
@@ -396,7 +429,6 @@ public class Server {
         }
 
         ChessGame game = gameData.game();
-
         if (game.isGameOver()) {
             ctx.send(gson.toJson(new ErrorMessage("Error: game is over")));
             return;
