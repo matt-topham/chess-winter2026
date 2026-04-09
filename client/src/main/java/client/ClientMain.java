@@ -28,6 +28,10 @@ public class ClientMain {
 
     private int currentGameId = -1;
 
+    private ChessGame.TeamColor currentPerspective = ChessGame.TeamColor.WHITE; // or whatever
+    private ChessGame lastGame = null; // most recent game snapshot from server
+
+
     public ClientMain(String host, int port) {
         this.host = host;
         this.port = port;
@@ -259,11 +263,14 @@ public class ClientMain {
             ws = null;
         }
 
+        currentPerspective = perspective;
+
         ws = new WebSocketFacade(
                 host, port,
                 load -> {
+                    lastGame = load.getGame();              // <-- store latest snapshot
                     System.out.print(ui.EscapeSequences.ERASE_SCREEN);
-                    BoardPrinter.printBoard(load.getGame().getBoard(), perspective);
+                    BoardPrinter.printBoard(lastGame.getBoard(), currentPerspective);
                 },
                 System.out::println,
                 System.out::println
@@ -296,11 +303,14 @@ public class ClientMain {
             ws = null;
         }
 
+        currentPerspective = ChessGame.TeamColor.WHITE;
+
         ws = new WebSocketFacade(
                 host, port,
                 load -> {
+                    lastGame = load.getGame();              // <-- store latest snapshot
                     System.out.print(ui.EscapeSequences.ERASE_SCREEN);
-                    BoardPrinter.printBoard(load.getGame().getBoard(), ChessGame.TeamColor.WHITE);
+                    BoardPrinter.printBoard(lastGame.getBoard(), currentPerspective);
                 },
                 System.out::println,
                 System.out::println
@@ -456,7 +466,12 @@ public class ClientMain {
     }
 
     private void doRedraw() {
-        System.out.println("Redraw not implemented yet.");
+        if (lastGame == null) {
+            System.out.println("No game loaded yet.");
+            return;
+        }
+        System.out.print(ui.EscapeSequences.ERASE_SCREEN);
+        BoardPrinter.printBoard(lastGame.getBoard(), currentPerspective);
     }
 
     private void doHighlight(String[] parts) {

@@ -28,7 +28,13 @@ public class Server {
     private final Map<WsContext, ConnInfo> connInfoBySession = new ConcurrentHashMap<>();
 
     public Server() {
-        javalin = Javalin.create(config -> config.staticFiles.add("web"));
+        javalin = Javalin.create(config -> {
+            config.staticFiles.add("web");
+
+            config.jetty.modifyWebSocketServletFactory(factory -> {
+                factory.setIdleTimeout(java.time.Duration.ofMinutes(30)); // pick your timeout
+            });
+        });
 
         initDatabase();
 
