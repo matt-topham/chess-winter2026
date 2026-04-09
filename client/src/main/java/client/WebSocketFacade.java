@@ -61,7 +61,9 @@ public class WebSocketFacade {
 
     public void close() {
         try {
-            if (session != null) session.close();
+            if (session != null) {
+                session.close();
+            }
         } catch (Exception ignored) {}
     }
 

@@ -38,8 +38,12 @@ public class ClientMain {
         String host = "localhost";
         int port = 8080;
 
-        if (args.length >= 1) host = args[0];
-        if (args.length >= 2) port = Integer.parseInt(args[1]);
+        if (args.length >= 1) {
+            host = args[0];
+        }
+        if (args.length >= 2) {
+            port = Integer.parseInt(args[1]);
+        }
 
         new ClientMain(host, port).run();
     }
@@ -51,13 +55,19 @@ public class ClientMain {
         while (true) {
             System.out.print(prompt());
             String line = in.nextLine().trim();
-            if (line.isEmpty()) continue;
+            if (line.isEmpty()) {
+                continue;
+            }
 
             try {
                 if (state == State.PRELOGIN) {
-                    if (handlePreLogin(line)) return;
-                } else {
+                    if (handlePreLogin(line)) {
+                        return;
+                    }
+                } else if (state == State.POSTLOGIN) {
                     handlePostLogin(line);
+                } else {
+                    handleInGame(line);
                 }
             } catch (ServerFacade.ClientException e) {
                 System.out.println(cleanMessage(e.getMessage()));
@@ -122,13 +132,25 @@ public class ClientMain {
         switch (command) {
             case "help" -> postLoginHelp();
             case "logout" -> doLogout();
-            case "create" -> doCreate(line); // allows spaces in name
+            case "create" -> doCreate(line);
             case "list" -> doList();
             case "play" -> doPlay(parts);
             case "observe" -> doObserve(parts);
+            default -> System.out.println("Unknown command. Type 'help'.");
+        }
+    }
+
+    private void handleInGame(String line) throws Exception {
+        String[] parts = splitCommand(line);
+        String command = parts[0].toLowerCase();
+
+        switch (command) {
+            case "help" -> inGameHelp();
             case "move" -> doMove(parts);
             case "leave" -> doLeave();
             case "resign" -> doResign();
+            case "redraw" -> doRedraw();
+            case "highlight" -> doHighlight(parts);
             default -> System.out.println("Unknown command. Type 'help'.");
         }
     }
@@ -143,6 +165,18 @@ public class ClientMain {
                     observe <game #>
                     leave
                     logout
+                """);
+    }
+
+    private void inGameHelp() {
+        System.out.println("""
+                InGame commands:
+                    help
+                    move
+                    leave
+                    resign
+                    redraw
+                    highlight
                 """);
     }
 
@@ -196,7 +230,9 @@ public class ClientMain {
         }
 
         Integer index = parseGameNumber(parts[1]);
-        if (index == null) return;
+        if (index == null) {
+            return;
+        }
 
         String colorInput = parts[2].toLowerCase();
         String color;
@@ -236,6 +272,9 @@ public class ClientMain {
         ws.connectGame(authToken, game.gameID(), color);
 
         currentGameId = game.gameID();
+
+        state = State.INGAME;
+        inGameHelp();
     }
 
     private void doObserve(String[] parts) throws Exception {
@@ -245,7 +284,9 @@ public class ClientMain {
         }
 
         Integer index = parseGameNumber(parts[1]);
-        if (index == null) return;
+        if (index == null) {
+            return;
+        }
 
         GameData game = lastListedGames.get(index);
 
@@ -268,6 +309,9 @@ public class ClientMain {
         ws.connectGame(authToken, game.gameID(), "OBSERVER");
 
         currentGameId = game.gameID();
+
+        state = State.INGAME;
+        inGameHelp();
     }
 
     private Integer parseGameNumber(String s) {
@@ -289,7 +333,11 @@ public class ClientMain {
     }
 
     private String prompt() {
-        return (state == State.PRELOGIN) ? "[prelogin] >>> " : "[postlogin] >>> ";
+        return switch (state) {
+            case PRELOGIN -> "[prelogin] >>> ";
+            case POSTLOGIN -> "[postlogin] >>> ";
+            case INGAME -> "[game] >>> ";
+        };
     }
 
     private static String cleanMessage(String msg) {
@@ -313,17 +361,17 @@ public class ClientMain {
         }
 
         try {
-            // If your WebSocketFacade has leaveGame(authToken, gameId),
-            // you must also remember the current gameId in ClientMain when you join.
             ws.leaveGame(authToken, currentGameId);
         } catch (Exception ignored) {
-            // Even if send fails, still close locally
         } finally {
             ws.close();
             ws = null;
             currentGameId = -1;
             System.out.println("Left game.");
         }
+
+        state = State.POSTLOGIN;
+        postLoginHelp();
     }
 
     private void doMove(String[] parts) {
@@ -378,7 +426,9 @@ public class ClientMain {
     }
 
     private static ChessPiece.PieceType parsePromotion(String s) {
-        if (s == null || s.isBlank()) return null;
+        if (s == null || s.isBlank()) {
+            return null;
+        }
         return switch (Character.toLowerCase(s.charAt(0))) {
             case 'q' -> ChessPiece.PieceType.QUEEN;
             case 'r' -> ChessPiece.PieceType.ROOK;
@@ -403,5 +453,13 @@ public class ClientMain {
 
         ws.resign(authToken, currentGameId);
         System.out.println("Resignation sent.");
+    }
+
+    private void doRedraw() {
+        System.out.println("Redraw not implemented yet.");
+    }
+
+    private void doHighlight(String[] parts) {
+        System.out.println("Highlight not implemented yet. Usage: highlight <square>");
     }
 }
