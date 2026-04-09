@@ -1,5 +1,7 @@
 package server;
 
+import chess.ChessGame;
+import chess.InvalidMoveException;
 import dataaccess.*;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -8,6 +10,7 @@ import io.javalin.websocket.WsContext;
 import model.AuthData;
 import model.GameData;
 import service.*;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.commands.ConnectCommand;
 import websocket.messages.LoadGameMessage;
@@ -28,7 +31,13 @@ public class Server {
     private final Map<WsContext, ConnInfo> connInfoBySession = new ConcurrentHashMap<>();
 
     public Server() {
-        javalin = Javalin.create(config -> config.staticFiles.add("web"));
+        javalin = Javalin.create(config -> {
+            config.staticFiles.add("web");
+
+            config.jetty.modifyWebSocketServletFactory(factory -> {
+                factory.setIdleTimeout(java.time.Duration.ofMinutes(30)); // pick your timeout
+            });
+        });
 
         try {
             DatabaseManager.initialize();
@@ -266,5 +275,73 @@ public class Server {
         broadcast(gameId, new NotificationMessage(username + " left the game"));
     }
 
-    private void handleMakeMove(WsContext ctx, String json, DataAccess data) {}
+    private void handleMakeMove(WsContext ctx, String json, DataAccess data) throws DataAccessException {
+        ConnInfo info = connInfoBySession.get(ctx);
+        if (info == null) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: unauthorized")));
+            return;
+        }
+
+        if ("OBSERVER".equals(info.role())) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: unauthorized")));
+            return;
+        }
+
+        MakeMoveCommand cmd = gson.fromJson(json, MakeMoveCommand.class);
+        if (cmd == null || cmd.getMove() == null) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: bad request")));
+            return;
+        }
+
+        int gameId = info.gameId();
+        GameData gameData = data.getGame(gameId);
+        if (gameData == null || gameData.game() == null) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: bad request")));
+            return;
+        }
+
+        ChessGame game = gameData.game();
+
+        ChessGame.TeamColor expected = "WHITE".equals(info.role())
+                ? ChessGame.TeamColor.WHITE
+                : ChessGame.TeamColor.BLACK;
+
+        if (game.getTeamTurn() != expected) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: not your turn")));
+            return;
+        }
+
+        try {
+            game.makeMove(cmd.getMove());
+        } catch (InvalidMoveException e) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: invalid move")));
+            return;
+        }
+
+        GameData updated = new GameData(
+                gameData.gameID(),
+                gameData.whiteUsername(),
+                gameData.blackUsername(),
+                gameData.gameName(),
+                game
+        );
+        data.updateGame(updated);
+
+        broadcast(gameId, new LoadGameMessage(game));
+
+        String moveText = cmd.getMove().getStartPosition() + " to " + cmd.getMove().getEndPosition();
+        broadcastExcept(gameId, ctx, new NotificationMessage(info.username() + " moved " + moveText));
+
+        ChessGame.TeamColor opponent = (expected == ChessGame.TeamColor.WHITE)
+                ? ChessGame.TeamColor.BLACK
+                : ChessGame.TeamColor.WHITE;
+
+        if (game.isInCheckmate(opponent)) {
+            broadcast(gameId, new NotificationMessage(opponent + " is in checkmate"));
+        } else if (game.isInStalemate(opponent)) {
+            broadcast(gameId, new NotificationMessage("Stalemate"));
+        } else if (game.isInCheck(opponent)) {
+            broadcast(gameId, new NotificationMessage(opponent + " is in check"));
+        }
+    }
 }

@@ -1,6 +1,9 @@
 package client;
 
 import chess.ChessGame;
+import chess.ChessMove;
+import chess.ChessPiece;
+import chess.ChessPosition;
 import model.GameData;
 
 import java.util.ArrayList;
@@ -123,6 +126,7 @@ public class ClientMain {
             case "list" -> doList();
             case "play" -> doPlay(parts);
             case "observe" -> doObserve(parts);
+            case "move" -> doMove(parts);
             case "leave" -> doLeave();
             default -> System.out.println("Unknown command. Type 'help'.");
         }
@@ -196,6 +200,7 @@ public class ClientMain {
         String colorInput = parts[2].toLowerCase();
         String color;
         ChessGame.TeamColor perspective;
+
 
         if (colorInput.equals("white")) {
             color = "WHITE";
@@ -318,5 +323,67 @@ public class ClientMain {
             currentGameId = -1;
             System.out.println("Left game.");
         }
+    }
+
+    private void doMove(String[] parts) {
+        if (ws == null || currentGameId == -1) {
+            System.out.println("You are not currently in a game. Use 'play' or 'observe' first.");
+            return;
+        }
+        if (parts.length < 3 || parts.length > 4) {
+            System.out.println("Usage: move <from> <to> [q|r|b|n]");
+            return;
+        }
+
+        try {
+            ChessPosition from = parseSquare(parts[1]);
+            ChessPosition to = parseSquare(parts[2]);
+
+            ChessPiece.PieceType promo = null;
+            if (parts.length == 4) {
+                promo = parsePromotion(parts[3]);
+                if (promo == null) {
+                    System.out.println("Promotion must be one of: q r b n");
+                    return;
+                }
+            }
+
+            ChessMove move = new ChessMove(from, to, promo);
+            ws.makeMove(authToken, currentGameId, move);
+
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static ChessPosition parseSquare(String s) {
+        if (s == null || s.length() != 2) {
+            throw new IllegalArgumentException("Square must look like e2");
+        }
+        char fileChar = Character.toLowerCase(s.charAt(0));
+        char rankChar = s.charAt(1);
+
+        if (fileChar < 'a' || fileChar > 'h') {
+            throw new IllegalArgumentException("File must be a-h");
+        }
+        if (rankChar < '1' || rankChar > '8') {
+            throw new IllegalArgumentException("Rank must be 1-8");
+        }
+
+        int file = (fileChar - 'a') + 1;   // a->1 ... h->8
+        int rank = (rankChar - '1') + 1;   // '1'->1 ... '8'->8
+
+        return new ChessPosition(rank, file);
+    }
+
+    private static ChessPiece.PieceType parsePromotion(String s) {
+        if (s == null || s.isBlank()) return null;
+        return switch (Character.toLowerCase(s.charAt(0))) {
+            case 'q' -> ChessPiece.PieceType.QUEEN;
+            case 'r' -> ChessPiece.PieceType.ROOK;
+            case 'b' -> ChessPiece.PieceType.BISHOP;
+            case 'n' -> ChessPiece.PieceType.KNIGHT;
+            default -> null;
+        };
     }
 }

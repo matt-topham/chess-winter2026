@@ -1,5 +1,6 @@
 package client;
 
+import chess.ChessMove;
 import com.google.gson.Gson;
 import websocket.commands.ConnectCommand;
 import websocket.messages.ServerMessage;
@@ -103,5 +104,9 @@ public class WebSocketFacade {
 
     public void leaveGame(String authToken, int gameId) {
         send(new websocket.commands.LeaveCommand(authToken, gameId));
+    }
+
+    public void makeMove(String authToken, int gameId, ChessMove move) {
+        send(new websocket.commands.MakeMoveCommand(authToken, gameId, move));
     }
 }
