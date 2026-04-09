@@ -452,6 +452,5 @@ public class Server {
         data.updateGame(updated);
 
         broadcast(gameId, new NotificationMessage(info.username() + " resigned. " + winner + " wins."));
-        broadcast(gameId, new LoadGameMessage(game));
     }
 }
