@@ -182,11 +182,6 @@ public class Server {
         }
 
         int gameId = cmd.getGameID();
-        String role = cmd.getPlayerColor();
-        if (role == null || role.isBlank()) {
-            ctx.send(gson.toJson(new ErrorMessage("Error: bad request")));
-            return;
-        }
 
         AuthData auth = data.getAuth(cmd.getAuthToken());
         if (auth == null || auth.username() == null || auth.username().isBlank()) {
@@ -197,6 +192,24 @@ public class Server {
 
         GameData game = data.getGame(gameId);
         if (game == null || game.game() == null) {
+            ctx.send(gson.toJson(new ErrorMessage("Error: bad request")));
+            return;
+        }
+
+        String role = cmd.getPlayerColor();
+        if (role == null || role.isBlank()) {
+            if (username.equals(game.whiteUsername())) {
+                role = "WHITE";
+            } else if (username.equals(game.blackUsername())) {
+                role = "BLACK";
+            } else {
+                role = "OBSERVER";
+            }
+        } else {
+            role = role.trim().toUpperCase();
+        }
+
+        if (!role.equals("WHITE") && !role.equals("BLACK") && !role.equals("OBSERVER")) {
             ctx.send(gson.toJson(new ErrorMessage("Error: bad request")));
             return;
         }
