@@ -380,7 +380,9 @@ public class Server {
 
     private void removeSessionFromGame(WsContext ctx, int gameId) {
         Set<WsContext> set = sessionsByGame.get(gameId);
-        if (set == null) return;
+        if (set == null) {
+            return;
+        }
 
         set.remove(ctx);
         if (set.isEmpty()) {
@@ -394,7 +396,9 @@ public class Server {
 
     private void clearPlayerSpotIfOwned(DataAccess data, int gameId, String username, String role) throws DataAccessException {
         GameData game = data.getGame(gameId);
-        if (game == null) return;
+        if (game == null) {
+            return;
+        }
 
         String white = game.whiteUsername();
         String black = game.blackUsername();
