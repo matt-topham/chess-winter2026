@@ -20,7 +20,9 @@ public class BoardPrinter {
                                   Set<ChessPosition> highlights) {
 
         boolean whiteView = (perspective == ChessGame.TeamColor.WHITE);
-        if (highlights == null) highlights = Set.of();
+        if (highlights == null) {
+            highlights = Set.of();
+        }
 
         char[] files = new char[]{'a','b','c','d','e','f','g','h'};
 
@@ -29,9 +31,13 @@ public class BoardPrinter {
 
         System.out.print("    ");
         if (whiteView) {
-            for (char f : files) System.out.print(" " + f + " ");
+            for (char f : files) {
+                System.out.print(" " + f + " ");
+            }
         } else {
-            for (int i = files.length - 1; i >= 0; i--) System.out.print(" " + files[i] + " ");
+            for (int i = files.length - 1; i >= 0; i--) {
+                System.out.print(" " + files[i] + " ");
+            }
         }
         System.out.println();
 
@@ -67,9 +73,13 @@ public class BoardPrinter {
 
         System.out.print("    ");
         if (whiteView) {
-            for (char f : files) System.out.print(" " + f + " ");
+            for (char f : files) {
+                System.out.print(" " + f + " ");
+            }
         } else {
-            for (int i = files.length - 1; i >= 0; i--) System.out.print(" " + files[i] + " ");
+            for (int i = files.length - 1; i >= 0; i--) {
+                System.out.print(" " + files[i] + " ");
+            }
         }
         System.out.println(EscapeSequences.RESET_BG_COLOR);
     }
@@ -79,7 +89,9 @@ public class BoardPrinter {
     }
 
     private static String pieceString(ChessPiece p) {
-        if (p == null) return EscapeSequences.EMPTY;
+        if (p == null) {
+            return EscapeSequences.EMPTY;
+        }
 
         boolean white = (p.getTeamColor() == ChessGame.TeamColor.WHITE);
         return switch (p.getPieceType()) {

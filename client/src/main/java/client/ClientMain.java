@@ -433,7 +433,6 @@ public class ClientMain {
 
         return new ChessPosition(rank, file);
     }
-
     private static ChessPiece.PieceType parsePromotion(String s) {
         if (s == null || s.isBlank()) {
             return null;
@@ -446,7 +445,6 @@ public class ClientMain {
             default -> null;
         };
     }
-
     private void doResign() {
         if (ws == null || currentGameId == -1) {
             System.out.println("You are not currently in a game.");
@@ -459,11 +457,9 @@ public class ClientMain {
             System.out.println("Resign cancelled.");
             return;
         }
-
         ws.resign(authToken, currentGameId);
         System.out.println("Resignation sent.");
     }
-
     private void doRedraw() {
         if (lastGame == null) {
             System.out.println("No game loaded yet.");
@@ -472,7 +468,6 @@ public class ClientMain {
         System.out.print(ui.EscapeSequences.ERASE_SCREEN);
         BoardPrinter.printBoard(lastGame.getBoard(), currentPerspective);
     }
-
     private void doHighlight(String[] parts) {
         if (lastGame == null) {
             System.out.println("No game loaded yet.");
@@ -482,13 +477,11 @@ public class ClientMain {
             System.out.println("Usage: highlight <square>  (example: highlight e2)");
             return;
         }
-
         ChessPosition from = parseSquare(parts[1]);
         if (from == null) {
             System.out.println("Invalid square. Use a1 through h8.");
             return;
         }
-
         var moves = lastGame.validMoves(from);
         if (moves == null || moves.isEmpty()) {
             System.out.print(EscapeSequences.ERASE_SCREEN);
@@ -496,10 +489,10 @@ public class ClientMain {
             System.out.println("No legal moves.");
             return;
         }
-
         java.util.HashSet<ChessPosition> targets = new java.util.HashSet<>();
-        for (var m : moves) targets.add(m.getEndPosition());
-
+        for (var m : moves) {
+            targets.add(m.getEndPosition());
+        }
         System.out.print(EscapeSequences.ERASE_SCREEN);
         BoardPrinter.printBoard(lastGame.getBoard(), currentPerspective, from, targets);
     }
